@@ -24,7 +24,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const categories = await storage.getCategories(userId);
+      let categories = await storage.getCategories(userId);
+      
+      // If no categories exist, create default ones
+      if (categories.length === 0) {
+        const defaultCategories = [
+          { name: "Food & Dining", color: "#EF4444", type: "expense" as const },
+          { name: "Transportation", color: "#F97316", type: "expense" as const },
+          { name: "Shopping", color: "#EAB308", type: "expense" as const },
+          { name: "Entertainment", color: "#8B5CF6", type: "expense" as const },
+          { name: "Bills & Utilities", color: "#3B82F6", type: "expense" as const },
+          { name: "Healthcare", color: "#10B981", type: "expense" as const },
+          { name: "Education", color: "#06B6D4", type: "expense" as const },
+          { name: "Personal Care", color: "#F59E0B", type: "expense" as const },
+          { name: "Salary", color: "#22C55E", type: "income" as const },
+          { name: "Business", color: "#8B5CF6", type: "income" as const },
+          { name: "Investments", color: "#3B82F6", type: "income" as const },
+          { name: "Other Income", color: "#10B981", type: "income" as const },
+        ];
+
+        for (const categoryData of defaultCategories) {
+          await storage.createCategory({ ...categoryData, userId });
+        }
+        
+        // Fetch the newly created categories
+        categories = await storage.getCategories(userId);
+      }
+      
       res.json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
