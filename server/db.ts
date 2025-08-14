@@ -1,5 +1,6 @@
-import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import pkg from 'pg';
+const { Pool } = pkg;
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
 // Use Supabase or fallback to DATABASE_URL
@@ -11,5 +12,12 @@ if (!connectionString) {
   );
 }
 
-export const pool = new Pool({ connectionString });
-export const db = drizzle({ client: pool, schema });
+export const pool = new Pool({ 
+  connectionString,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+export const db = drizzle(pool, { schema });
