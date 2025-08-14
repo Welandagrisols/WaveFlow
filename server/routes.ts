@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTransactionSchema, insertCategorySchema, insertPaymentReminderSchema } from "@shared/schema";
+import { insertTransactionSchema, insertCategorySchema, insertPaymentReminderSchema, insertSmsTransactionSchema, insertSupplierSchema, insertItemSchema } from "@shared/schema";
+import { MpesaSmsParser } from "./smsParser";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -159,6 +160,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating payment reminder:", error);
       res.status(500).json({ message: "Failed to update payment reminder" });
+    }
+  });
+
+  // SMS Transaction routes
+  app.post("/api/sms-transactions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { smsText, senderNumber, simCard } = req.body;
+      
+      // Parse the SMS
+      const parsedTransaction = MpesaSmsParser.parseSms(smsText);
+      
+      if (!parsedTransaction.isValid) {
+        return res.status(400).json({ message: "Unable to parse SMS transaction" });
+      }
+      
+      // Determine SIM and account type
+      const detectedSimCard = simCard || MpesaSmsParser.detectSimCard(senderNumber, smsText);
+      const accountType = MpesaSmsParser.classifyAccountType(parsedTransaction.recipientName, parsedTransaction.amount);
+      
+      // Create SMS transaction record
+      const smsTransaction = await storage.createSmsTransaction({
+        smsText,
+        senderNumber: senderNumber || 'M-PESA',
+        simCard: detectedSimCard,
+        accountType,
+        amount: parsedTransaction.amount.toString(),
+        recipientPhone: parsedTransaction.recipientPhone,
+        recipientName: parsedTransaction.recipientName,
+        transactionCode: parsedTransaction.transactionCode,
+        balance: parsedTransaction.balance?.toString(),
+        isConfirmed: false,
+        userId
+      });
+      
+      // Check if we know this supplier
+      let supplier = null;
+      if (parsedTransaction.recipientPhone) {
+        supplier = await storage.getSupplierByPhone(userId, parsedTransaction.recipientPhone);
+      }
+      
+      res.json({
+        smsTransaction,
+        parsedData: parsedTransaction,
+        supplier,
+        needsConfirmation: true
+      });
+    } catch (error) {
+      console.error("Error processing SMS transaction:", error);
+      res.status(500).json({ message: "Failed to process SMS transaction" });
+    }
+  });
+
+  app.get("/api/sms-transactions/unconfirmed", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const unconfirmedTransactions = await storage.getUnconfirmedSmsTransactions(userId);
+      res.json(unconfirmedTransactions);
+    } catch (error) {
+      console.error("Error fetching unconfirmed SMS transactions:", error);
+      res.status(500).json({ message: "Failed to fetch unconfirmed transactions" });
+    }
+  });
+
+  app.patch("/api/sms-transactions/:id/confirm", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { itemName, supplierName, categoryId, isPersonal } = req.body;
+      
+      // Get the SMS transaction
+      const smsTransactions = await storage.getUnconfirmedSmsTransactions(userId);
+      const smsTransaction = smsTransactions.find(t => t.id === id);
+      
+      if (!smsTransaction) {
+        return res.status(404).json({ message: "SMS transaction not found" });
+      }
+      
+      // Create the actual transaction
+      const transaction = await storage.createTransaction({
+        amount: smsTransaction.amount,
+        currency: "KES",
+        direction: "OUT",
+        description: itemName || `Payment to ${supplierName || smsTransaction.recipientName || 'Unknown'}`,
+        payeePhone: smsTransaction.recipientPhone,
+        categoryId,
+        transactionType: "MPESA",
+        reference: smsTransaction.transactionCode,
+        notes: `Processed from SMS: ${smsTransaction.smsText.substring(0, 100)}...`,
+        isPersonal: isPersonal || false,
+        status: "COMPLETED",
+        transactionDate: smsTransaction.createdAt,
+        userId
+      });
+      
+      // Confirm SMS transaction
+      await storage.confirmSmsTransaction(id, userId, itemName, supplierName, categoryId);
+      
+      // Update or create supplier
+      if (smsTransaction.recipientPhone && supplierName) {
+        let supplier = await storage.getSupplierByPhone(userId, smsTransaction.recipientPhone);
+        if (!supplier) {
+          supplier = await storage.createSupplier({
+            name: supplierName,
+            phone: smsTransaction.recipientPhone,
+            commonItems: itemName ? [itemName] : [],
+            defaultCategoryId: categoryId,
+            isPersonal: isPersonal || false,
+            totalTransactions: "1",
+            lastTransactionDate: new Date(),
+            userId
+          });
+        } else if (itemName) {
+          await storage.updateSupplierItems(supplier.id, userId, itemName);
+        }
+      }
+      
+      // Update or create item
+      if (itemName) {
+        let item = await storage.getItemByName(userId, itemName);
+        if (!item) {
+          await storage.createItem({
+            name: itemName,
+            categoryId,
+            avgPrice: smsTransaction.amount,
+            lastPrice: smsTransaction.amount,
+            unit: "piece",
+            purchaseCount: "1",
+            isPersonal: isPersonal || false,
+            userId
+          });
+        } else {
+          await storage.updateItemPrice(item.id, userId, Number(smsTransaction.amount));
+        }
+      }
+      
+      res.json({ transaction, confirmed: true });
+    } catch (error) {
+      console.error("Error confirming SMS transaction:", error);
+      res.status(500).json({ message: "Failed to confirm transaction" });
+    }
+  });
+
+  // Suppliers routes
+  app.get("/api/suppliers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const suppliers = await storage.getSuppliers(userId);
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      res.status(500).json({ message: "Failed to fetch suppliers" });
+    }
+  });
+
+  // Items routes
+  app.get("/api/items", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { categoryId } = req.query;
+      const items = await storage.getItems(userId, categoryId as string);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      res.status(500).json({ message: "Failed to fetch items" });
     }
   });
 

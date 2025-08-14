@@ -3,6 +3,9 @@ import {
   categories,
   transactions,
   paymentReminders,
+  smsTransactions,
+  suppliers,
+  items,
   type User,
   type UpsertUser,
   type Transaction,
@@ -11,6 +14,12 @@ import {
   type InsertCategory,
   type PaymentReminder,
   type InsertPaymentReminder,
+  type SmsTransaction,
+  type InsertSmsTransaction,
+  type Supplier,
+  type InsertSupplier,
+  type Item,
+  type InsertItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, gte, lte } from "drizzle-orm";
@@ -43,6 +52,23 @@ export interface IStorage {
   getPaymentReminders(userId: string): Promise<PaymentReminder[]>;
   createPaymentReminder(reminder: InsertPaymentReminder & { userId: string }): Promise<PaymentReminder>;
   updatePaymentReminderStatus(id: string, userId: string, status: string): Promise<PaymentReminder | undefined>;
+  
+  // SMS Transaction operations
+  createSmsTransaction(smsTransaction: InsertSmsTransaction & { userId: string }): Promise<SmsTransaction>;
+  getUnconfirmedSmsTransactions(userId: string): Promise<SmsTransaction[]>;
+  confirmSmsTransaction(id: string, userId: string, itemName?: string, supplierName?: string, categoryId?: string): Promise<SmsTransaction | undefined>;
+  
+  // Supplier operations
+  getSuppliers(userId: string): Promise<Supplier[]>;
+  getSupplierByPhone(userId: string, phone: string): Promise<Supplier | undefined>;
+  createSupplier(supplier: InsertSupplier & { userId: string }): Promise<Supplier>;
+  updateSupplierItems(supplierId: string, userId: string, newItem: string): Promise<void>;
+  
+  // Item operations
+  getItems(userId: string, categoryId?: string): Promise<Item[]>;
+  getItemByName(userId: string, name: string): Promise<Item | undefined>;
+  createItem(item: InsertItem & { userId: string }): Promise<Item>;
+  updateItemPrice(itemId: string, userId: string, price: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -190,6 +216,135 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(paymentReminders.id, id), eq(paymentReminders.userId, userId)))
       .returning();
     return updatedReminder;
+  }
+
+  // SMS Transaction operations
+  async createSmsTransaction(smsTransaction: InsertSmsTransaction & { userId: string }): Promise<SmsTransaction> {
+    const [newSmsTransaction] = await db
+      .insert(smsTransactions)
+      .values(smsTransaction)
+      .returning();
+    return newSmsTransaction;
+  }
+
+  async getUnconfirmedSmsTransactions(userId: string): Promise<SmsTransaction[]> {
+    return await db
+      .select()
+      .from(smsTransactions)
+      .where(and(eq(smsTransactions.userId, userId), eq(smsTransactions.isConfirmed, false)))
+      .orderBy(desc(smsTransactions.createdAt));
+  }
+
+  async confirmSmsTransaction(id: string, userId: string, itemName?: string, supplierName?: string, categoryId?: string): Promise<SmsTransaction | undefined> {
+    const [updatedSmsTransaction] = await db
+      .update(smsTransactions)
+      .set({
+        isConfirmed: true,
+        itemName,
+        supplierName,
+      })
+      .where(and(eq(smsTransactions.id, id), eq(smsTransactions.userId, userId)))
+      .returning();
+    return updatedSmsTransaction;
+  }
+
+  // Supplier operations
+  async getSuppliers(userId: string): Promise<Supplier[]> {
+    return await db
+      .select()
+      .from(suppliers)
+      .where(eq(suppliers.userId, userId))
+      .orderBy(desc(suppliers.lastTransactionDate));
+  }
+
+  async getSupplierByPhone(userId: string, phone: string): Promise<Supplier | undefined> {
+    const [supplier] = await db
+      .select()
+      .from(suppliers)
+      .where(and(eq(suppliers.userId, userId), eq(suppliers.phone, phone)));
+    return supplier;
+  }
+
+  async createSupplier(supplier: InsertSupplier & { userId: string }): Promise<Supplier> {
+    const [newSupplier] = await db
+      .insert(suppliers)
+      .values(supplier)
+      .returning();
+    return newSupplier;
+  }
+
+  async updateSupplierItems(supplierId: string, userId: string, newItem: string): Promise<void> {
+    const supplier = await db
+      .select()
+      .from(suppliers)
+      .where(and(eq(suppliers.id, supplierId), eq(suppliers.userId, userId)));
+
+    if (supplier[0]) {
+      const currentItems = supplier[0].commonItems || [];
+      if (!currentItems.includes(newItem)) {
+        currentItems.push(newItem);
+        await db
+          .update(suppliers)
+          .set({ 
+            commonItems: currentItems,
+            updatedAt: new Date()
+          })
+          .where(and(eq(suppliers.id, supplierId), eq(suppliers.userId, userId)));
+      }
+    }
+  }
+
+  // Item operations
+  async getItems(userId: string, categoryId?: string): Promise<Item[]> {
+    const conditions = [eq(items.userId, userId)];
+    if (categoryId) {
+      conditions.push(eq(items.categoryId, categoryId));
+    }
+
+    return await db
+      .select()
+      .from(items)
+      .where(and(...conditions))
+      .orderBy(items.name);
+  }
+
+  async getItemByName(userId: string, name: string): Promise<Item | undefined> {
+    const [item] = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, userId), eq(items.name, name)));
+    return item;
+  }
+
+  async createItem(item: InsertItem & { userId: string }): Promise<Item> {
+    const [newItem] = await db
+      .insert(items)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async updateItemPrice(itemId: string, userId: string, price: number): Promise<void> {
+    const existingItem = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
+
+    if (existingItem[0]) {
+      const currentAvg = Number(existingItem[0].avgPrice) || 0;
+      const purchaseCount = Number(existingItem[0].purchaseCount) || 0;
+      const newAvg = purchaseCount === 0 ? price : (currentAvg * purchaseCount + price) / (purchaseCount + 1);
+
+      await db
+        .update(items)
+        .set({
+          avgPrice: newAvg.toString(),
+          lastPrice: price.toString(),
+          purchaseCount: (purchaseCount + 1).toString(),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(items.id, itemId), eq(items.userId, userId)));
+    }
   }
 }
 

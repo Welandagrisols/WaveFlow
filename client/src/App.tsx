@@ -11,6 +11,7 @@ import Transactions from "@/pages/transactions";
 import SendMoney from "@/pages/send-money";
 import TrackPayments from "@/pages/track-payments";
 import Reports from "@/pages/reports";
+import SmsConfirmation from "@/pages/sms-confirmation";
 import MainLayout from "@/components/layout/main-layout";
 
 function Router() {
@@ -45,6 +46,11 @@ function Router() {
           <Route path="/reports" component={() => (
             <MainLayout>
               <Reports />
+            </MainLayout>
+          )} />
+          <Route path="/confirm-sms" component={() => (
+            <MainLayout>
+              <SmsConfirmation />
             </MainLayout>
           )} />
         </>

@@ -1,8 +1,8 @@
-# Yasinga - Secure M-Pesa Expense Tracker
+# Yasinga - Smart M-Pesa Restaurant Business Tracker
 
 ## Overview
 
-Yasinga is a mobile-first Progressive Web App (PWA) designed to automatically capture, categorize, and track M-Pesa transactions. The application provides a secure, beautiful interface for managing personal and business expenses with features including auto-categorization rules, quick expense tagging, payment reminders, and comprehensive reporting. Built with a focus on speed, accuracy, and effortless user experience.
+Yasinga is a mobile-first Progressive Web App (PWA) designed for restaurant owners and business operators who use M-Pesa for both business and personal transactions. The application automatically processes M-Pesa SMS messages to detect transactions, then prompts users to quickly confirm what was purchased, who it was from, and whether it was a business or personal expense. Features intelligent learning to remember suppliers, common items, and automatically suggest categorization for repeat transactions. Built specifically for dual-SIM users managing separate business and personal M-Pesa accounts from a single interface.
 
 ## User Preferences
 

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { Wallet, BarChart3, List, Send, Search, FileText, LogOut, User } from "lucide-react";
+import { Wallet, BarChart3, List, Send, Search, FileText, LogOut, User, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -16,6 +16,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItems = [
     { path: "/", icon: BarChart3, label: "Dashboard" },
+    { path: "/confirm-sms", icon: Smartphone, label: "Confirm SMS" },
     { path: "/transactions", icon: List, label: "Transactions" },
     { path: "/send-money", icon: Send, label: "Send Money" },
     { path: "/track-payments", icon: Search, label: "Track Payments" },
