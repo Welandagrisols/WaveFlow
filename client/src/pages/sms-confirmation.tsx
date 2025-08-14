@@ -46,10 +46,7 @@ export default function SmsConfirmation() {
       isPersonal: boolean;
     }) => {
       const { id, ...body } = data;
-      return await apiRequest(`/api/sms-transactions/${id}/confirm`, {
-        method: "PATCH",
-        body: body,
-      });
+      return await apiRequest("PATCH", `/api/sms-transactions/${id}/confirm`, body);
     },
     onSuccess: () => {
       toast({
@@ -237,7 +234,7 @@ export default function SmsConfirmation() {
                       </CardDescription>
                     </div>
                     <div className="text-right text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString()}
+                      {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
                     </div>
                   </div>
                 </CardHeader>
