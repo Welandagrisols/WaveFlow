@@ -341,6 +341,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics endpoint for supplier spending
+  app.get("/api/analytics/suppliers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      
+      const transactions = await storage.getTransactions(userId, 1000, 0);
+      const suppliers = await storage.getSuppliers(userId);
+      
+      const supplierAnalytics = suppliers.map((supplier: any) => {
+        const supplierTransactions = transactions.filter((t: any) => 
+          t.payeePhone === supplier.phone &&
+          (!startDate || new Date(t.transactionDate) >= new Date(startDate as string)) &&
+          (!endDate || new Date(t.transactionDate) <= new Date(endDate as string))
+        );
+        
+        const totalAmount = supplierTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+        const avgAmount = supplierTransactions.length > 0 ? totalAmount / supplierTransactions.length : 0;
+        const lastTransaction = supplierTransactions.length > 0 ? 
+          Math.max(...supplierTransactions.map((t: any) => new Date(t.transactionDate).getTime())) : 0;
+        
+        return {
+          ...supplier,
+          totalSpent: totalAmount,
+          transactionCount: supplierTransactions.length,
+          avgTransactionAmount: avgAmount,
+          lastTransactionDate: lastTransaction > 0 ? new Date(lastTransaction) : null,
+          businessTransactions: supplierTransactions.filter((t: any) => !t.isPersonal).length,
+          personalTransactions: supplierTransactions.filter((t: any) => t.isPersonal).length
+        };
+      }).filter((s: any) => s.totalSpent > 0)
+        .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
+      
+      res.json(supplierAnalytics);
+    } catch (error) {
+      console.error("Error fetching supplier analytics:", error);
+      res.status(500).json({ message: "Failed to fetch supplier analytics" });
+    }
+  });
+
+  // Analytics endpoint for item spending
+  app.get("/api/analytics/items", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate, categoryId } = req.query;
+      
+      const transactions = await storage.getTransactions(userId, 1000, 0);
+      const items = await storage.getItems(userId, categoryId as string);
+      
+      const itemAnalytics = items.map((item: any) => {
+        const itemTransactions = transactions.filter((t: any) => 
+          t.description?.toLowerCase().includes(item.name.toLowerCase()) &&
+          (!startDate || new Date(t.transactionDate) >= new Date(startDate as string)) &&
+          (!endDate || new Date(t.transactionDate) <= new Date(endDate as string))
+        );
+        
+        const totalAmount = itemTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+        const avgAmount = itemTransactions.length > 0 ? totalAmount / itemTransactions.length : 0;
+        const lastPrice = itemTransactions.length > 0 ? 
+          parseFloat(itemTransactions.sort((a: any, b: any) => 
+            new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
+          )[0].amount) : 0;
+        
+        return {
+          ...item,
+          totalSpent: totalAmount,
+          transactionCount: itemTransactions.length,
+          avgPrice: avgAmount,
+          lastPrice,
+          businessTransactions: itemTransactions.filter((t: any) => !t.isPersonal).length,
+          personalTransactions: itemTransactions.filter((t: any) => t.isPersonal).length
+        };
+      }).filter((i: any) => i.totalSpent > 0)
+        .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
+      
+      res.json(itemAnalytics);
+    } catch (error) {
+      console.error("Error fetching item analytics:", error);
+      res.status(500).json({ message: "Failed to fetch item analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

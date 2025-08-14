@@ -1,18 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Clock, CheckCircle, AlertTriangle, Lightbulb, Droplets, Wifi, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  TrendingUp, PieChart, ShoppingCart, Building2, Receipt, 
+  CalendarDays, DollarSign, Package, Store 
+} from "lucide-react";
 import { format } from "date-fns";
 
 export default function TrackPayments() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
-  const queryClient = useQueryClient();
+  const [timePeriod, setTimePeriod] = useState("30");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -29,66 +34,84 @@ export default function TrackPayments() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: paymentReminders = [], isLoading: remindersLoading } = useQuery({
-    queryKey: ["/api/payment-reminders"],
+  // Fetch analytics data
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+    queryKey: ["/api/transactions"],
     enabled: isAuthenticated,
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await apiRequest("PATCH", `/api/payment-reminders/${id}/status`, { status });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/payment-reminders"] });
-      toast({
-        title: "Success",
-        description: "Payment status updated successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update payment status",
-        variant: "destructive",
-      });
-    },
+  const { data: categoryData = [], isLoading: categoryLoading } = useQuery({
+    queryKey: ["/api/transactions/by-category"],
+    enabled: isAuthenticated,
   });
 
-  const getPaymentIcon = (title: string) => {
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('water')) return Droplets;
-    if (titleLower.includes('electric') || titleLower.includes('power')) return Lightbulb;
-    if (titleLower.includes('internet') || titleLower.includes('wifi')) return Wifi;
-    return User;
-  };
-
-  const getStatusColor = (status: string, dueDate: string) => {
-    const now = new Date();
-    const due = new Date(dueDate);
-    const isOverdue = now > due && status === 'PENDING';
-    
-    if (status === 'COMPLETED') return 'bg-yasinga-success/10 text-yasinga-success';
-    if (isOverdue) return 'bg-yasinga-error/10 text-yasinga-error';
-    if (status === 'PENDING') return 'bg-yasinga-warning/10 text-yasinga-warning';
-    return 'bg-slate-100 text-slate-600';
-  };
-
-  const getStatusText = (status: string, dueDate: string) => {
-    const now = new Date();
-    const due = new Date(dueDate);
-    const isOverdue = now > due && status === 'PENDING';
-    
-    if (isOverdue) return 'Overdue';
-    return status.charAt(0) + status.slice(1).toLowerCase();
-  };
-
-  const pendingPayments = paymentReminders.filter(p => p.status === 'PENDING');
-  const completedPayments = paymentReminders.filter(p => p.status === 'COMPLETED');
-  const upcomingPayments = paymentReminders.filter(p => {
-    const now = new Date();
-    const due = new Date(p.dueDate);
-    return p.status === 'PENDING' && due > now;
+  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
+    queryKey: ["/api/suppliers"],
+    enabled: isAuthenticated,
   });
+
+  const { data: items = [], isLoading: itemsLoading } = useQuery({
+    queryKey: ["/api/items"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    enabled: isAuthenticated,
+  });
+
+  // Helper functions for analytics
+  const formatCurrency = (amount: string | number) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES'
+    }).format(numAmount);
+  };
+
+  const filterTransactionsByPeriod = (transactions: any[]) => {
+    const now = new Date();
+    const daysAgo = parseInt(timePeriod);
+    const filterDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+    return transactions.filter((t: any) => new Date(t.transactionDate) >= filterDate);
+  };
+
+  // Analytics calculations
+  const filteredTransactions = filterTransactionsByPeriod(transactions as any[]);
+  const businessTransactions = filteredTransactions.filter((t: any) => !t.isPersonal);
+  const personalTransactions = filteredTransactions.filter((t: any) => t.isPersonal);
+
+  const totalSpent = filteredTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+  const businessSpent = businessTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+  const personalSpent = personalTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+
+  // Top suppliers analysis
+  const supplierSpending = (suppliers as any[]).map((supplier: any) => {
+    const supplierTransactions = filteredTransactions.filter((t: any) => t.payeePhone === supplier.phone);
+    const totalAmount = supplierTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+    return {
+      ...supplier,
+      totalSpent: totalAmount,
+      transactionCount: supplierTransactions.length,
+      lastTransaction: supplierTransactions.length > 0 ? 
+        Math.max(...supplierTransactions.map((t: any) => new Date(t.transactionDate).getTime())) : 0
+    };
+  }).filter((s: any) => s.totalSpent > 0)
+    .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
+
+  // Top items analysis
+  const itemSpending = (items as any[]).map((item: any) => {
+    const itemTransactions = filteredTransactions.filter((t: any) => 
+      t.description?.toLowerCase().includes(item.name.toLowerCase())
+    );
+    const totalAmount = itemTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+    return {
+      ...item,
+      totalSpent: totalAmount,
+      transactionCount: itemTransactions.length
+    };
+  }).filter((i: any) => i.totalSpent > 0)
+    .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
 
   if (isLoading) {
     return (
@@ -107,204 +130,273 @@ export default function TrackPayments() {
 
   return (
     <div className="p-4 lg:p-8 yasinga-fade-in">
-      <Card className="yasinga-card">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-slate-800">Payment Tracking</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-8">
-            {/* Pending Payments */}
-            <div>
-              <h4 className="text-md font-semibold text-slate-700 mb-4 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-yasinga-warning" />
-                Pending Payments ({pendingPayments.length})
-              </h4>
-              {remindersLoading ? (
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Payment Analytics</h1>
+          <p className="text-gray-600 dark:text-gray-400">Analyze your spending by category, supplier, items and more</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Select value={timePeriod} onValueChange={setTimePeriod}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 3 months</SelectItem>
+              <SelectItem value="365">This year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Spent</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(totalSpent)}
+                </p>
+              </div>
+              <DollarSign className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Business Expenses</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(businessSpent)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {businessTransactions.length} transactions
+                </p>
+              </div>
+              <Building2 className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Personal Expenses</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {formatCurrency(personalSpent)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {personalTransactions.length} transactions
+                </p>
+              </div>
+              <Receipt className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="categories" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="categories" className="flex items-center gap-2">
+            <PieChart className="h-4 w-4" />
+            Categories
+          </TabsTrigger>
+          <TabsTrigger value="suppliers" className="flex items-center gap-2">
+            <Store className="h-4 w-4" />
+            Suppliers
+          </TabsTrigger>
+          <TabsTrigger value="items" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Items
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Trends
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="categories" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Spending by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {categoryLoading ? (
                 <div className="space-y-4">
-                  {[...Array(2)].map((_, i) => (
-                    <div key={i} className="animate-pulse border border-slate-200 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-slate-200 rounded-lg" />
-                          <div>
-                            <div className="h-4 bg-slate-200 rounded w-32 mb-2" />
-                            <div className="h-3 bg-slate-200 rounded w-24" />
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="h-4 bg-slate-200 rounded w-20 mb-2" />
-                          <div className="h-6 bg-slate-200 rounded w-16" />
-                        </div>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center justify-between p-4 border rounded-lg">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (categoryData as any[]).length > 0 ? (
+                <div className="space-y-4">
+                  {(categoryData as any[]).map((category: any) => (
+                    <div key={category.categoryId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{category.categoryName}</h3>
+                        <p className="text-sm text-gray-500">{category.count} transactions</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{formatCurrency(category.totalAmount)}</p>
+                        <p className="text-sm text-gray-500">
+                          {Math.round((category.totalAmount / totalSpent) * 100)}%
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : pendingPayments.length > 0 ? (
-                <div className="space-y-4">
-                  {pendingPayments.map((payment) => {
-                    const IconComponent = getPaymentIcon(payment.title);
-                    const now = new Date();
-                    const due = new Date(payment.dueDate);
-                    const isOverdue = now > due;
-                    const daysUntilDue = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                    
-                    return (
-                      <div
-                        key={payment.id}
-                        className={`border p-4 rounded-lg ${isOverdue ? 'border-yasinga-error/20 bg-yasinga-error/5' : 'border-yasinga-warning/20 bg-yasinga-warning/5'}`}
-                        data-testid={`payment-${payment.id}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-10 h-10 ${isOverdue ? 'bg-yasinga-error/20' : 'bg-yasinga-warning/20'} rounded-lg flex items-center justify-center`}>
-                              <IconComponent className={`w-5 h-5 ${isOverdue ? 'text-yasinga-error' : 'text-yasinga-warning'}`} />
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{payment.title}</p>
-                              <p className="text-sm text-slate-500">
-                                {isOverdue 
-                                  ? `Overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''}`
-                                  : `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`
-                                }
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right flex items-center space-x-3">
-                            <div>
-                              <p className="font-semibold text-slate-800">
-                                KES {Number(payment.amount).toLocaleString()}
-                              </p>
-                              <Badge className={getStatusColor(payment.status, payment.dueDate)}>
-                                {getStatusText(payment.status, payment.dueDate)}
-                              </Badge>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateStatusMutation.mutate({ id: payment.id, status: 'COMPLETED' })}
-                              disabled={updateStatusMutation.isPending}
-                              className="text-yasinga-success border-yasinga-success hover:bg-yasinga-success hover:text-white"
-                              data-testid={`button-mark-paid-${payment.id}`}
-                            >
-                              Mark Paid
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               ) : (
-                <div className="text-center py-8 border border-dashed border-slate-300 rounded-lg" data-testid="text-no-pending-payments">
-                  <Clock className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500">No pending payments</p>
+                <div className="text-center py-12">
+                  <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No category data available</p>
                 </div>
               )}
-            </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* Recently Completed */}
-            <div>
-              <h4 className="text-md font-semibold text-slate-700 mb-4 flex items-center">
-                <CheckCircle className="w-5 h-5 mr-2 text-yasinga-success" />
-                Recently Completed
-              </h4>
-              {completedPayments.length > 0 ? (
+        <TabsContent value="suppliers" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Suppliers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {suppliersLoading ? (
                 <div className="space-y-4">
-                  {completedPayments.slice(0, 3).map((payment) => {
-                    const IconComponent = getPaymentIcon(payment.title);
-                    
-                    return (
-                      <div
-                        key={payment.id}
-                        className="border border-yasinga-success/20 bg-yasinga-success/5 p-4 rounded-lg"
-                        data-testid={`completed-payment-${payment.id}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-yasinga-success/20 rounded-lg flex items-center justify-center">
-                              <IconComponent className="w-5 h-5 text-yasinga-success" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{payment.title}</p>
-                              <p className="text-sm text-slate-500">
-                                Completed {format(new Date(payment.dueDate), 'MMM dd, yyyy')}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-slate-800">
-                              KES {Number(payment.amount).toLocaleString()}
-                            </p>
-                            <Badge className="bg-yasinga-success/10 text-yasinga-success">
-                              Completed
-                            </Badge>
-                          </div>
-                        </div>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center justify-between p-4 border rounded-lg">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : supplierSpending.length > 0 ? (
+                <div className="space-y-4">
+                  {supplierSpending.slice(0, 10).map((supplier: any) => (
+                    <div key={supplier.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{supplier.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {supplier.phone} • {supplier.transactionCount} transactions
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Common items: {supplier.commonItems?.slice(0, 2).join(', ') || 'None'}
+                        </p>
                       </div>
-                    );
-                  })}
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{formatCurrency(supplier.totalSpent)}</p>
+                        <p className="text-sm text-gray-500">
+                          {supplier.lastTransaction > 0 ? 
+                            format(new Date(supplier.lastTransaction), 'MMM dd') : 'No recent'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="text-center py-8 border border-dashed border-slate-300 rounded-lg" data-testid="text-no-completed-payments">
-                  <CheckCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500">No completed payments</p>
+                <div className="text-center py-12">
+                  <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No supplier data available</p>
                 </div>
               )}
-            </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* Upcoming Reminders */}
-            <div>
-              <h4 className="text-md font-semibold text-slate-700 mb-4 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-slate-600" />
-                Upcoming Reminders
-              </h4>
-              {upcomingPayments.length > 0 ? (
+        <TabsContent value="items" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Most Purchased Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {itemsLoading ? (
                 <div className="space-y-4">
-                  {upcomingPayments.slice(0, 3).map((payment) => {
-                    const IconComponent = getPaymentIcon(payment.title);
-                    const daysUntilDue = Math.ceil((new Date(payment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    
-                    return (
-                      <div
-                        key={payment.id}
-                        className="border border-slate-200 p-4 rounded-lg"
-                        data-testid={`upcoming-payment-${payment.id}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                              <IconComponent className="w-5 h-5 text-slate-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{payment.title}</p>
-                              <p className="text-sm text-slate-500">
-                                Due in {daysUntilDue} day{daysUntilDue !== 1 ? 's' : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-slate-800">
-                              KES {Number(payment.amount).toLocaleString()}
-                            </p>
-                            <Badge className="bg-slate-100 text-slate-600">
-                              Upcoming
-                            </Badge>
-                          </div>
-                        </div>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center justify-between p-4 border rounded-lg">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : itemSpending.length > 0 ? (
+                <div className="space-y-4">
+                  {itemSpending.slice(0, 10).map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{item.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {item.transactionCount} purchases • Avg: {formatCurrency(item.avgPrice || 0)}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Category: {(categories as any[]).find((c: any) => c.id === item.categoryId)?.name || 'Unknown'}
+                        </p>
                       </div>
-                    );
-                  })}
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{formatCurrency(item.totalSpent)}</p>
+                        <p className="text-sm text-gray-500">
+                          Last: {formatCurrency(item.lastPrice || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="text-center py-8 border border-dashed border-slate-300 rounded-lg" data-testid="text-no-upcoming-payments">
-                  <AlertTriangle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500">No upcoming payment reminders</p>
+                <div className="text-center py-12">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No item data available</p>
                 </div>
               )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Spending Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Business vs Personal</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-green-800">Business Expenses</span>
+                      <span className="font-semibold text-green-900">{formatCurrency(businessSpent)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <span className="text-orange-800">Personal Expenses</span>
+                      <span className="font-semibold text-orange-900">{formatCurrency(personalSpent)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Transaction Volume</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-blue-800">Total Transactions</span>
+                      <span className="font-semibold text-blue-900">{filteredTransactions.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-gray-800">Average Amount</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(totalSpent / (filteredTransactions.length || 1))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
