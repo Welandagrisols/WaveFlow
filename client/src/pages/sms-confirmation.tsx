@@ -385,16 +385,10 @@ function TestSmsForm({ onSubmit }: { onSubmit: () => void }) {
 
   const processSms = useMutation({
     mutationFn: async (data: { smsText: string; simCard: string }) => {
-      return await apiRequest('/api/sms-transactions', {
-        method: 'POST',
-        body: JSON.stringify({
-          smsText: data.smsText,
-          senderNumber: 'M-PESA',
-          simCard: data.simCard,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      return await apiRequest('POST', '/api/sms-transactions', {
+        smsText: data.smsText,
+        senderNumber: 'M-PESA',
+        simCard: data.simCard,
       });
     },
     onSuccess: () => {
