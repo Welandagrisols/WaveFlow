@@ -9,6 +9,8 @@ export interface ParsedSmsTransaction {
   balance?: number;
   isValid: boolean;
   transactionType: 'SENT' | 'RECEIVED' | 'WITHDRAWN' | 'DEPOSITED' | 'UNKNOWN';
+  suggestedPurpose?: string;
+  suggestedCategory?: string;
 }
 
 export class MpesaSmsParser {
@@ -54,6 +56,9 @@ export class MpesaSmsParser {
     const recipientName = this.extractRecipientName(match);
     const balance = this.extractBalance(match);
 
+    const suggestedPurpose = this.suggestPurpose(recipientName || '', originalText, amount);
+    const suggestedCategory = this.suggestCategory(recipientName || '', suggestedPurpose, amount);
+
     return {
       amount,
       recipientPhone,
@@ -61,7 +66,9 @@ export class MpesaSmsParser {
       transactionCode,
       balance,
       isValid: amount > 0 && !!transactionCode,
-      transactionType: 'SENT'
+      transactionType: 'SENT',
+      suggestedPurpose,
+      suggestedCategory
     };
   }
 
@@ -72,6 +79,9 @@ export class MpesaSmsParser {
     const recipientName = this.extractSenderName(match);
     const balance = this.extractBalance(match);
 
+    const suggestedPurpose = this.suggestPurpose(recipientName || '', originalText, amount);
+    const suggestedCategory = this.suggestCategory(recipientName || '', suggestedPurpose, amount);
+
     return {
       amount,
       recipientPhone,
@@ -79,7 +89,9 @@ export class MpesaSmsParser {
       transactionCode,
       balance,
       isValid: amount > 0 && !!transactionCode,
-      transactionType: 'RECEIVED'
+      transactionType: 'RECEIVED',
+      suggestedPurpose,
+      suggestedCategory
     };
   }
 
@@ -197,5 +209,88 @@ export class MpesaSmsParser {
     const isLargeAmount = amount && amount > 5000;
     
     return hasBusinessKeyword || isLargeAmount ? 'business' : 'personal';
+  }
+
+  // Suggest purpose/item based on recipient name and transaction context
+  private static suggestPurpose(recipientName: string, smsText: string, amount: number): string {
+    const recipient = recipientName.toLowerCase();
+    const text = smsText.toLowerCase();
+    
+    // Hotel-specific suppliers and common purposes
+    const supplierPatterns = [
+      // Food & Beverage suppliers
+      { keywords: ['fresh', 'vegetables', 'market', 'groceries', 'fruits'], purpose: 'Fresh vegetables and fruits' },
+      { keywords: ['meat', 'butchery', 'chicken', 'fish'], purpose: 'Meat and poultry supplies' },
+      { keywords: ['dairy', 'milk', 'cheese'], purpose: 'Dairy products' },
+      { keywords: ['bakery', 'bread', 'flour'], purpose: 'Bakery items and supplies' },
+      { keywords: ['spices', 'seasoning'], purpose: 'Spices and seasonings' },
+      
+      // Utilities and services
+      { keywords: ['kenya power', 'kplc', 'power', 'electricity'], purpose: 'Electricity bill payment' },
+      { keywords: ['nairobi water', 'water', 'sewerage'], purpose: 'Water and sewerage bill' },
+      { keywords: ['safaricom', 'airtel', 'telkom'], purpose: 'Internet and communication services' },
+      
+      // Maintenance and supplies  
+      { keywords: ['hardware', 'paint', 'cement', 'iron'], purpose: 'Maintenance and repair supplies' },
+      { keywords: ['cleaning', 'detergent', 'soap'], purpose: 'Cleaning supplies' },
+      { keywords: ['linen', 'towel', 'bedding'], purpose: 'Bed linen and towels' },
+      
+      // Staff and services
+      { keywords: ['salary', 'wage', 'staff', 'employee'], purpose: 'Staff wages and salaries' },
+      { keywords: ['transport', 'fuel', 'petrol'], purpose: 'Transportation and fuel' },
+      
+      // Equipment and furniture
+      { keywords: ['furniture', 'table', 'chair', 'bed'], purpose: 'Furniture and equipment' },
+      { keywords: ['electronics', 'tv', 'fridge'], purpose: 'Electronic equipment' },
+    ];
+    
+    // Check recipient name and SMS text for patterns
+    for (const pattern of supplierPatterns) {
+      if (pattern.keywords.some(keyword => recipient.includes(keyword) || text.includes(keyword))) {
+        return pattern.purpose;
+      }
+    }
+    
+    // Amount-based suggestions
+    if (amount > 50000) return 'Major equipment or monthly expenses';
+    if (amount > 20000) return 'Weekly supplies or services';
+    if (amount > 5000) return 'Daily supplies or utilities';
+    if (amount < 1000) return 'Small supplies or miscellaneous';
+    
+    return 'General hotel supplies';
+  }
+
+  // Suggest category based on purpose and recipient
+  private static suggestCategory(recipientName: string, purpose: string, amount: number): string {
+    const recipient = recipientName.toLowerCase();
+    const purposeLower = purpose.toLowerCase();
+    
+    // Category mapping based on keywords
+    const categoryMappings = [
+      { keywords: ['vegetables', 'fruits', 'meat', 'dairy', 'food', 'kitchen'], category: 'Food & Beverages' },
+      { keywords: ['supplies', 'ingredients', 'spices', 'bakery'], category: 'Kitchen Supplies' },
+      { keywords: ['cleaning', 'detergent', 'housekeeping'], category: 'Housekeeping' },
+      { keywords: ['linen', 'towel', 'bedding'], category: 'Linens & Towels' },
+      { keywords: ['maintenance', 'repair', 'paint', 'hardware'], category: 'Maintenance & Repairs' },
+      { keywords: ['electricity', 'power', 'water', 'internet', 'bill'], category: 'Utilities & Bills' },
+      { keywords: ['salary', 'wage', 'staff', 'employee'], category: 'Staff Wages' },
+      { keywords: ['amenities', 'guest', 'toiletries'], category: 'Guest Amenities' },
+      { keywords: ['furniture', 'equipment', 'electronics'], category: 'Equipment & Furniture' },
+      { keywords: ['transport', 'fuel', 'petrol'], category: 'Transportation' },
+      { keywords: ['marketing', 'event', 'promotion'], category: 'Marketing & Events' },
+      { keywords: ['security', 'safety', 'guard'], category: 'Security & Safety' },
+    ];
+    
+    // Check purpose and recipient name for category indicators
+    for (const mapping of categoryMappings) {
+      if (mapping.keywords.some(keyword => 
+        purposeLower.includes(keyword) || recipient.includes(keyword)
+      )) {
+        return mapping.category;
+      }
+    }
+    
+    // Default to Food & Beverages for hotel business
+    return 'Food & Beverages';
   }
 }

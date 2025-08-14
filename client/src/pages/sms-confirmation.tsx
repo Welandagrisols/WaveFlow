@@ -148,7 +148,15 @@ export default function SmsConfirmation() {
     if (confirmationForms[transaction.id]) return;
 
     const suggestedSupplier = getSuggestedSupplier(transaction.recipientPhone || '');
-    const defaultCategory = categories.find(c => c.name === 'Food & Beverages')?.id || 
+    
+    // Use intelligent suggestions from the SMS parser
+    const suggestedPurpose = (transaction as any).suggestedPurpose || '';
+    const suggestedCategoryName = (transaction as any).suggestedCategory || '';
+    
+    // Find category ID by name from suggestions, or use default
+    const suggestedCategory = categories.find(c => c.name === suggestedCategoryName);
+    const defaultCategory = suggestedCategory?.id ||
+                          categories.find(c => c.name === 'Food & Beverages')?.id || 
                           categories.find(c => c.name === 'Kitchen Supplies')?.id ||
                           categories.find(c => !c.isBusiness)?.id || 
                           categories[0]?.id || '';
@@ -156,7 +164,7 @@ export default function SmsConfirmation() {
     setConfirmationForms(prev => ({
       ...prev,
       [transaction.id]: {
-        itemName: '',
+        itemName: suggestedPurpose, // Auto-fill with intelligent suggestion
         supplierName: suggestedSupplier?.name || transaction.recipientName || '',
         categoryId: suggestedSupplier?.defaultCategoryId || defaultCategory,
         isPersonal: transaction.accountType === 'personal'
@@ -280,6 +288,23 @@ export default function SmsConfirmation() {
                       </div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
                         Previous purchases: {suggestedSupplier.commonItems?.join(', ') || 'None recorded'}
+                      </p>
+                    </div>
+                  )}
+
+                  {(transaction as any).suggestedPurpose && (
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                          Smart Suggestions Applied
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        Auto-detected: <strong>{(transaction as any).suggestedPurpose}</strong> → <strong>{(transaction as any).suggestedCategory}</strong>
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        You can edit these suggestions as needed
                       </p>
                     </div>
                   )}

@@ -211,7 +211,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({
-        smsTransaction,
+        smsTransaction: {
+          ...smsTransaction,
+          suggestedPurpose: parsedTransaction.suggestedPurpose,
+          suggestedCategory: parsedTransaction.suggestedCategory
+        },
         parsedData: parsedTransaction,
         supplier,
         needsConfirmation: true
