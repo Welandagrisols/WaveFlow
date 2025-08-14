@@ -108,6 +108,30 @@ export default function SmsConfirmation() {
     });
   };
 
+  const handleSkip = async (transactionId: string) => {
+    try {
+      // For now, just remove from local state - in a real app you might want to mark it as skipped
+      setConfirmationForms(prev => {
+        const { [transactionId]: _, ...rest } = prev;
+        return rest;
+      });
+      
+      toast({
+        title: "Transaction skipped",
+        description: "Transaction skipped for now. You can process it later.",
+      });
+      
+      // Refresh the list to remove the skipped transaction from view
+      queryClient.invalidateQueries({ queryKey: ["/api/sms-transactions/unconfirmed"] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to skip transaction.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatCurrency = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-KE', {
@@ -124,7 +148,8 @@ export default function SmsConfirmation() {
     if (confirmationForms[transaction.id]) return;
 
     const suggestedSupplier = getSuggestedSupplier(transaction.recipientPhone || '');
-    const defaultCategory = categories.find(c => c.name === 'Food & Dining')?.id || 
+    const defaultCategory = categories.find(c => c.name === 'Food & Beverages')?.id || 
+                          categories.find(c => c.name === 'Kitchen Supplies')?.id ||
                           categories.find(c => !c.isBusiness)?.id || 
                           categories[0]?.id || '';
 
@@ -338,6 +363,7 @@ export default function SmsConfirmation() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleSkip(transaction.id)}
                       disabled={confirmTransactionMutation.isPending}
                       data-testid={`button-skip-${transaction.id}`}
                     >
