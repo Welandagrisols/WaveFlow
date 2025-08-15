@@ -18,6 +18,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { path: "/", icon: BarChart3, label: "Dashboard" },
     { path: "/confirm-sms", icon: Smartphone, label: "Confirm SMS" },
     { path: "/transactions", icon: List, label: "Transactions" },
+    { path: "/personal-tracking", icon: User, label: "Personal Expenses" },
     { path: "/send-money", icon: Send, label: "Send Money" },
     { path: "/track-payments", icon: Search, label: "Track Payments" },
     { path: "/reports", icon: FileText, label: "Reports" },

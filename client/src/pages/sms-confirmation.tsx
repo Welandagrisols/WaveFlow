@@ -44,6 +44,9 @@ export default function SmsConfirmation() {
       supplierName: string;
       categoryId: string;
       isPersonal: boolean;
+      isLoan?: boolean;
+      loanRecipient?: string;
+      expectedRepaymentDate?: string;
     }) => {
       const { id, ...body } = data;
       return await apiRequest("PATCH", `/api/sms-transactions/${id}/confirm`, body);
@@ -72,6 +75,9 @@ export default function SmsConfirmation() {
     supplierName: string;
     categoryId: string;
     isPersonal: boolean;
+    isLoan: boolean;
+    loanRecipient: string;
+    expectedRepaymentDate: string;
   }>>({});
 
   const updateForm = (transactionId: string, updates: Partial<typeof confirmationForms[string]>) => {
@@ -86,7 +92,10 @@ export default function SmsConfirmation() {
       itemName: '',
       supplierName: '',
       categoryId: '',
-      isPersonal: false
+      isPersonal: false,
+      isLoan: false,
+      loanRecipient: '',
+      expectedRepaymentDate: ''
     };
   };
 
@@ -368,19 +377,67 @@ export default function SmsConfirmation() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor={`personal-${transaction.id}`}>Personal Expense</Label>
-                        <Switch
-                          id={`personal-${transaction.id}`}
-                          checked={form.isPersonal}
-                          onCheckedChange={(checked) => updateForm(transaction.id, { isPersonal: checked })}
-                          data-testid={`switch-personal-${transaction.id}`}
-                        />
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={`personal-${transaction.id}`}>Personal Expense</Label>
+                          <Switch
+                            id={`personal-${transaction.id}`}
+                            checked={form.isPersonal}
+                            onCheckedChange={(checked) => updateForm(transaction.id, { isPersonal: checked })}
+                            data-testid={`switch-personal-${transaction.id}`}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Toggle on if this was a personal expense, not business-related
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        Toggle on if this was a personal expense, not business-related
-                      </p>
+
+                      {form.isPersonal && (
+                        <div className="ml-2 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-400 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor={`loan-${transaction.id}`} className="text-orange-800 dark:text-orange-300 text-sm font-medium">
+                              Is this a loan to someone?
+                            </Label>
+                            <Switch
+                              id={`loan-${transaction.id}`}
+                              checked={form.isLoan || false}
+                              onCheckedChange={(checked) => updateForm(transaction.id, { isLoan: checked })}
+                              data-testid={`switch-loan-${transaction.id}`}
+                            />
+                          </div>
+
+                          {form.isLoan && (
+                            <div className="space-y-3">
+                              <div className="space-y-2">
+                                <Label htmlFor={`recipient-${transaction.id}`} className="text-orange-800 dark:text-orange-300">
+                                  Who received this loan?
+                                </Label>
+                                <Input
+                                  id={`recipient-${transaction.id}`}
+                                  placeholder="e.g., John, Sister, Friend"
+                                  value={form.loanRecipient || ''}
+                                  onChange={(e) => updateForm(transaction.id, { loanRecipient: e.target.value })}
+                                  className="border-orange-300 focus:border-orange-500"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor={`repayment-${transaction.id}`} className="text-orange-800 dark:text-orange-300">
+                                  Expected repayment date
+                                </Label>
+                                <Input
+                                  type="date"
+                                  id={`repayment-${transaction.id}`}
+                                  value={form.expectedRepaymentDate || ''}
+                                  onChange={(e) => updateForm(transaction.id, { expectedRepaymentDate: e.target.value })}
+                                  className="border-orange-300 focus:border-orange-500"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

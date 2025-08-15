@@ -61,6 +61,10 @@ export const transactions = pgTable("transactions", {
   reference: varchar("reference"),
   notes: text("notes"),
   isPersonal: boolean("is_personal").default(false),
+  isLoan: boolean("is_loan").default(false), // Track if this is a loan to someone
+  loanRecipient: varchar("loan_recipient"), // Name of person who received the loan
+  expectedRepaymentDate: timestamp("expected_repayment_date"), // When loan should be repaid
+  isRepaid: boolean("is_repaid").default(false), // Track if loan has been repaid
   status: varchar("status").default("COMPLETED"), // 'PENDING', 'COMPLETED', 'FAILED'
   transactionDate: timestamp("transaction_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

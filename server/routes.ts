@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
-      const { itemName, supplierName, categoryId, isPersonal } = req.body;
+      const { itemName, supplierName, categoryId, isPersonal, isLoan, loanRecipient, expectedRepaymentDate } = req.body;
       
       // Get the SMS transaction
       const smsTransactions = await storage.getUnconfirmedSmsTransactions(userId);
@@ -263,6 +263,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reference: smsTransaction.transactionCode,
         notes: `Processed from SMS: ${smsTransaction.smsText.substring(0, 100)}...`,
         isPersonal: isPersonal || false,
+        isLoan: isLoan || false,
+        loanRecipient: (isLoan && loanRecipient) ? loanRecipient : undefined,
+        expectedRepaymentDate: (isLoan && expectedRepaymentDate) ? new Date(expectedRepaymentDate) : undefined,
+        isRepaid: false,
         status: "COMPLETED",
         transactionDate: smsTransaction.createdAt,
         userId
@@ -420,6 +424,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching item analytics:", error);
       res.status(500).json({ message: "Failed to fetch item analytics" });
+    }
+  });
+
+  // Loan tracking routes
+  app.get("/api/loans/outstanding", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const outstandingLoans = await storage.getOutstandingLoans(userId);
+      res.json(outstandingLoans);
+    } catch (error) {
+      console.error("Error fetching outstanding loans:", error);
+      res.status(500).json({ message: "Failed to fetch outstanding loans" });
+    }
+  });
+
+  app.patch("/api/loans/:transactionId/repaid", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { transactionId } = req.params;
+      await storage.markLoanAsRepaid(transactionId, userId);
+      res.json({ message: "Loan marked as repaid successfully" });
+    } catch (error) {
+      console.error("Error marking loan as repaid:", error);
+      res.status(500).json({ message: "Failed to mark loan as repaid" });
+    }
+  });
+
+  // Personal expenses summary route
+  app.get("/api/personal-expenses/summary", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      const summary = await storage.getPersonalExpensesSummary(
+        userId,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching personal expenses summary:", error);
+      res.status(500).json({ message: "Failed to fetch personal expenses summary" });
+    }
+  });
+
+  // Initialize personal categories for new users
+  app.post("/api/categories/init-personal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.initializePersonalCategories(userId);
+      res.json({ message: "Personal categories initialized successfully" });
+    } catch (error) {
+      console.error("Error initializing personal categories:", error);
+      res.status(500).json({ message: "Failed to initialize personal categories" });
     }
   });
 

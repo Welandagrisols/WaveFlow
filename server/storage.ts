@@ -69,6 +69,15 @@ export interface IStorage {
   getItemByName(userId: string, name: string): Promise<Item | undefined>;
   createItem(item: InsertItem & { userId: string }): Promise<Item>;
   updateItemPrice(itemId: string, userId: string, price: number): Promise<void>;
+
+  // Loan tracking operations
+  getOutstandingLoans(userId: string): Promise<Array<Transaction & { loanRecipient: string; expectedRepaymentDate: Date }>>;
+  markLoanAsRepaid(transactionId: string, userId: string): Promise<void>;
+  getPersonalExpensesSummary(userId: string, startDate?: Date, endDate?: Date): Promise<{
+    totalPersonalExpenses: number;
+    outstandingLoans: number;
+    categoryBreakdown: Array<{ categoryName: string; amount: number; count: number }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -106,6 +115,30 @@ export class DatabaseStorage implements IStorage {
       .values(category)
       .returning();
     return newCategory;
+  }
+
+  async initializePersonalCategories(userId: string): Promise<void> {
+    const personalCategories = [
+      { name: "Personal Food & Dining", isBusiness: false, color: "#FF6B6B", icon: "utensils" },
+      { name: "Clothing & Accessories", isBusiness: false, color: "#4ECDC4", icon: "tshirt" },
+      { name: "Healthcare & Medical", isBusiness: false, color: "#45B7D1", icon: "medical-bag" },
+      { name: "Transportation", isBusiness: false, color: "#96CEB4", icon: "car" },
+      { name: "Entertainment & Recreation", isBusiness: false, color: "#FFEAA7", icon: "gamepad-2" },
+      { name: "Education & Learning", isBusiness: false, color: "#DDA0DD", icon: "graduation-cap" },
+      { name: "Family & Friends Support", isBusiness: false, color: "#FFB6C1", icon: "heart" },
+      { name: "Loans to Friends/Family", isBusiness: false, color: "#FFA500", icon: "hand-helping" },
+      { name: "Personal Care & Beauty", isBusiness: false, color: "#87CEEB", icon: "sparkles" },
+      { name: "Gifts & Special Occasions", isBusiness: false, color: "#98FB98", icon: "gift" },
+      { name: "Subscriptions & Memberships", isBusiness: false, color: "#F0E68C", icon: "credit-card" },
+      { name: "Savings & Investments", isBusiness: false, color: "#20B2AA", icon: "trending-up" },
+    ];
+
+    for (const category of personalCategories) {
+      await db
+        .insert(categories)
+        .values({ ...category, userId })
+        .onConflictDoNothing();
+    }
   }
 
   async getTransactions(userId: string, limit = 50, offset = 0): Promise<Transaction[]> {
@@ -345,6 +378,97 @@ export class DatabaseStorage implements IStorage {
         })
         .where(and(eq(items.id, itemId), eq(items.userId, userId)));
     }
+  }
+
+  async getOutstandingLoans(userId: string): Promise<Array<Transaction & { loanRecipient: string; expectedRepaymentDate: Date }>> {
+    return await db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.isLoan, true),
+          eq(transactions.isRepaid, false)
+        )
+      )
+      .orderBy(desc(transactions.transactionDate)) as any;
+  }
+
+  async markLoanAsRepaid(transactionId: string, userId: string): Promise<void> {
+    await db
+      .update(transactions)
+      .set({ isRepaid: true })
+      .where(
+        and(
+          eq(transactions.id, transactionId),
+          eq(transactions.userId, userId),
+          eq(transactions.isLoan, true)
+        )
+      );
+  }
+
+  async getPersonalExpensesSummary(userId: string, startDate?: Date, endDate?: Date): Promise<{
+    totalPersonalExpenses: number;
+    outstandingLoans: number;
+    categoryBreakdown: Array<{ categoryName: string; amount: number; count: number }>;
+  }> {
+    const whereConditions = [
+      eq(transactions.userId, userId),
+      eq(transactions.isPersonal, true)
+    ];
+    
+    if (startDate) {
+      whereConditions.push(gte(transactions.transactionDate, startDate));
+    }
+    if (endDate) {
+      whereConditions.push(lte(transactions.transactionDate, endDate));
+    }
+
+    // Get total personal expenses
+    const [totalResult] = await db
+      .select({
+        total: sql<number>`sum(${transactions.amount}::numeric)`,
+        count: sql<number>`count(*)`,
+      })
+      .from(transactions)
+      .where(and(...whereConditions));
+
+    // Get outstanding loans
+    const [loansResult] = await db
+      .select({
+        total: sql<number>`sum(${transactions.amount}::numeric)`,
+      })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.isLoan, true),
+          eq(transactions.isRepaid, false)
+        )
+      );
+
+    // Get category breakdown for personal expenses
+    const categoryBreakdown = await db
+      .select({
+        categoryName: categories.name,
+        amount: sql<number>`sum(${transactions.amount}::numeric)`,
+        count: sql<number>`count(*)`,
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(and(...whereConditions))
+      .groupBy(categories.id, categories.name)
+      .orderBy(sql`sum(${transactions.amount}::numeric) desc`);
+
+    return {
+      totalPersonalExpenses: Number(totalResult?.total || 0),
+      outstandingLoans: Number(loansResult?.total || 0),
+      categoryBreakdown: categoryBreakdown.map(item => ({
+        categoryName: item.categoryName || 'Uncategorized',
+        amount: Number(item.amount),
+        count: Number(item.count),
+      })),
+    };
   }
 }
 
