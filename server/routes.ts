@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTransactionSchema, insertCategorySchema, insertPaymentReminderSchema, insertSmsTransactionSchema, insertSupplierSchema, insertItemSchema } from "@shared/schema";
 import { MpesaSmsParser } from "./smsParser";
+import { wsManager } from "./websocket";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -73,6 +74,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const categoryData = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory({ ...categoryData, userId });
+      
+      // Broadcast real-time update to all user's devices
+      wsManager.broadcastCategoryUpdate(userId, category);
+      
       res.json(category);
     } catch (error) {
       console.error("Error creating category:", error);
@@ -99,6 +104,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const transactionData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction({ ...transactionData, userId });
+      
+      // Broadcast real-time update to all user's devices
+      wsManager.broadcastTransactionUpdate(userId, transaction);
+      
       res.json(transaction);
     } catch (error) {
       console.error("Error creating transaction:", error);
@@ -477,6 +486,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error initializing personal categories:", error);
       res.status(500).json({ message: "Failed to initialize personal categories" });
+    }
+  });
+
+  // Data export routes
+  app.get("/api/export/json", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      
+      const [transactions, categories, suppliers, paymentReminders] = await Promise.all([
+        storage.getTransactions(userId, 10000, 0),
+        storage.getCategories(userId),
+        storage.getSuppliers(userId),
+        storage.getPaymentReminders(userId)
+      ]);
+
+      const filteredTransactions = transactions.filter((t: any) => {
+        const transactionDate = new Date(t.transactionDate);
+        return (!startDate || transactionDate >= new Date(startDate as string)) &&
+               (!endDate || transactionDate <= new Date(endDate as string));
+      });
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        dateRange: {
+          startDate: startDate || null,
+          endDate: endDate || null
+        },
+        transactions: filteredTransactions,
+        categories,
+        suppliers,
+        paymentReminders,
+        summary: {
+          totalTransactions: filteredTransactions.length,
+          totalIncome: filteredTransactions.filter((t: any) => t.direction === 'IN').reduce((sum, t: any) => sum + parseFloat(t.amount), 0),
+          totalExpenses: filteredTransactions.filter((t: any) => t.direction === 'OUT').reduce((sum, t: any) => sum + parseFloat(t.amount), 0)
+        }
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="yasinga-export-${new Date().toISOString().split('T')[0]}.json"`);
+      res.json(exportData);
+    } catch (error) {
+      console.error("Error exporting JSON data:", error);
+      res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  app.get("/api/export/csv", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      const Papa = (await import('papaparse')).default;
+      
+      const [transactions, categories] = await Promise.all([
+        storage.getTransactions(userId, 10000, 0),
+        storage.getCategories(userId)
+      ]);
+
+      const categoryMap = new Map(categories.map((c: any) => [c.id, c.name]));
+
+      const filteredTransactions = transactions.filter((t: any) => {
+        const transactionDate = new Date(t.transactionDate);
+        return (!startDate || transactionDate >= new Date(startDate as string)) &&
+               (!endDate || transactionDate <= new Date(endDate as string));
+      });
+
+      const csvData = filteredTransactions.map((t: any) => ({
+        Date: new Date(t.transactionDate).toLocaleDateString(),
+        Amount: t.amount,
+        Currency: t.currency,
+        Direction: t.direction,
+        Description: t.description,
+        Category: categoryMap.get(t.categoryId) || 'Uncategorized',
+        PayeePhone: t.payeePhone || '',
+        TransactionType: t.transactionType,
+        Reference: t.reference || '',
+        IsPersonal: t.isPersonal ? 'Yes' : 'No',
+        IsLoan: t.isLoan ? 'Yes' : 'No',
+        Status: t.status
+      }));
+
+      const csv = Papa.unparse(csvData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="yasinga-transactions-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting CSV data:", error);
+      res.status(500).json({ message: "Failed to export CSV data" });
+    }
+  });
+
+  app.get("/api/export/pdf", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      const jsPDF = (await import('jspdf')).default;
+      const autoTable = (await import('jspdf-autotable')).default;
+      
+      const [transactions, categories, user] = await Promise.all([
+        storage.getTransactions(userId, 10000, 0),
+        storage.getCategories(userId),
+        storage.getUser(userId)
+      ]);
+
+      const categoryMap = new Map(categories.map((c: any) => [c.id, c.name]));
+
+      const filteredTransactions = transactions.filter((t: any) => {
+        const transactionDate = new Date(t.transactionDate);
+        return (!startDate || transactionDate >= new Date(startDate as string)) &&
+               (!endDate || transactionDate <= new Date(endDate as string));
+      });
+
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('Yasinga Financial Report', 20, 30);
+      doc.setFontSize(12);
+      doc.text(`Generated for: ${user?.firstName || 'User'} ${user?.lastName || ''}`, 20, 45);
+      doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 20, 55);
+      
+      if (startDate || endDate) {
+        doc.text(`Period: ${startDate ? new Date(startDate as string).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate as string).toLocaleDateString() : 'Present'}`, 20, 65);
+      }
+
+      // Summary
+      const totalIncome = filteredTransactions.filter((t: any) => t.direction === 'IN').reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+      const totalExpenses = filteredTransactions.filter((t: any) => t.direction === 'OUT').reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
+      const netBalance = totalIncome - totalExpenses;
+
+      doc.setFontSize(14);
+      doc.text('Summary', 20, 85);
+      doc.setFontSize(11);
+      doc.text(`Total Income: KES ${totalIncome.toLocaleString()}`, 20, 100);
+      doc.text(`Total Expenses: KES ${totalExpenses.toLocaleString()}`, 20, 110);
+      doc.text(`Net Balance: KES ${netBalance.toLocaleString()}`, 20, 120);
+      doc.text(`Total Transactions: ${filteredTransactions.length}`, 20, 130);
+
+      // Transactions table
+      const tableData = filteredTransactions.slice(0, 100).map((t: any) => [
+        new Date(t.transactionDate).toLocaleDateString(),
+        t.direction === 'IN' ? `+${t.amount}` : `-${t.amount}`,
+        t.description.substring(0, 30),
+        categoryMap.get(t.categoryId) || 'Uncategorized',
+        t.transactionType
+      ]);
+
+      autoTable(doc, {
+        head: [['Date', 'Amount (KES)', 'Description', 'Category', 'Type']],
+        body: tableData,
+        startY: 145,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [0, 102, 204] }
+      });
+
+      if (filteredTransactions.length > 100) {
+        doc.text(`Note: Showing first 100 of ${filteredTransactions.length} transactions`, 20, (doc as any).lastAutoTable?.finalY + 10 || 200);
+      }
+
+      const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="yasinga-report-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Error exporting PDF data:", error);
+      res.status(500).json({ message: "Failed to export PDF data" });
+    }
+  });
+
+  // Backup functionality
+  app.post("/api/backup/email", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+
+      // Get all user data for backup
+      const [transactions, categories, suppliers, paymentReminders, user] = await Promise.all([
+        storage.getTransactions(userId, 10000, 0),
+        storage.getCategories(userId),
+        storage.getSuppliers(userId),
+        storage.getPaymentReminders(userId),
+        storage.getUser(userId)
+      ]);
+
+      const backupData = {
+        backupDate: new Date().toISOString(),
+        userId,
+        userInfo: user,
+        transactions,
+        categories,
+        suppliers,
+        paymentReminders,
+        metadata: {
+          totalTransactions: transactions.length,
+          totalCategories: categories.length,
+          totalSuppliers: suppliers.length
+        }
+      };
+
+      // For now, return the backup data (email sending would need SMTP configuration)
+      res.json({
+        message: "Backup created successfully",
+        backupData,
+        note: "Email sending requires SMTP configuration. Backup data returned for download."
+      });
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      res.status(500).json({ message: "Failed to create backup" });
     }
   });
 

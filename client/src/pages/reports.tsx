@@ -1,11 +1,92 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Calendar, PieChart, TrendingUp, Trophy, FileText, Mail } from "lucide-react";
+
+function ExportDialog({ onExport }: { onExport: (format: string, startDate?: string, endDate?: string) => void }) {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const handleExportWithDates = (format: string) => {
+    onExport(format, startDate, endDate);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="start-date">Start Date (optional)</Label>
+          <Input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="end-date">End Date (optional)</Label>
+          <Input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          onClick={() => handleExportWithDates('json')}
+          variant="outline"
+          className="flex items-center justify-center space-x-2 p-4"
+          data-testid="button-export-json"
+        >
+          <FileText className="w-4 h-4" />
+          <span>JSON</span>
+        </Button>
+        
+        <Button
+          onClick={() => handleExportWithDates('csv')}
+          variant="outline"
+          className="flex items-center justify-center space-x-2 p-4"
+          data-testid="button-export-csv"
+        >
+          <FileText className="w-4 h-4" />
+          <span>CSV</span>
+        </Button>
+        
+        <Button
+          onClick={() => handleExportWithDates('pdf')}
+          variant="outline"
+          className="flex items-center justify-center space-x-2 p-4"
+          data-testid="button-export-pdf"
+        >
+          <FileText className="w-4 h-4" />
+          <span>PDF</span>
+        </Button>
+        
+        <Button
+          onClick={() => handleExportWithDates('email')}
+          variant="outline"
+          className="flex items-center justify-center space-x-2 p-4"
+          data-testid="button-export-email"
+        >
+          <Mail className="w-4 h-4" />
+          <span>Email</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function Reports() {
   const { toast } = useToast();
@@ -52,12 +133,58 @@ export default function Reports() {
 
   const topCategoryPercentage = totalExpenses > 0 ? (topCategory.amount / totalExpenses) * 100 : 0;
 
-  const handleExport = (format: string) => {
+  const handleExport = async (format: string, startDate?: string, endDate?: string) => {
     toast({
       title: "Export Started",
       description: `Preparing your ${format.toUpperCase()} report...`,
     });
-    // In a real app, this would trigger a download
+    
+    try {
+      if (format === 'email') {
+        // For now, show a placeholder for email functionality
+        toast({
+          title: "Email Export",
+          description: "Email export feature will be available once SMTP is configured.",
+        });
+        return;
+      }
+
+      // Create download link for file exports
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      const response = await fetch(`/api/export/${format}?${params.toString()}`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = response.headers.get('content-disposition')?.split('filename="')[1]?.split('"')[0] || `yasinga-export.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Complete",
+        description: `Your ${format.toUpperCase()} report has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your data. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -254,33 +381,20 @@ export default function Reports() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <Button 
-              onClick={() => handleExport('csv')}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-yasinga-primary text-white rounded-lg hover:bg-blue-700 transition-colors"
-              data-testid="button-export-csv"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Export as CSV</span>
-            </Button>
-            
-            <Button 
-              onClick={() => handleExport('pdf')}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-yasinga-error text-white rounded-lg hover:bg-red-700 transition-colors"
-              data-testid="button-export-pdf"
-            >
-              <Download className="w-4 h-4" />
-              <span>Export as PDF</span>
-            </Button>
-            
-            <Button 
-              onClick={() => handleExport('email')}
-              variant="outline"
-              className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-              data-testid="button-email-report"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Email Report</span>
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Download className="w-4 h-4" />
+                  <span>Export Data</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Export Your Data</DialogTitle>
+                </DialogHeader>
+                <ExportDialog onExport={handleExport} />
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

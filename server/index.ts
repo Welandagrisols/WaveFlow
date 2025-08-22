@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { WebSocketServer } from 'ws';
+import { setupWebSocket } from './websocket';
 
 const app = express();
 app.use(express.json());
@@ -67,5 +69,10 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // TODO: Re-enable WebSocket after fixing connection issues
+    // const wss = new WebSocketServer({ server });
+    // setupWebSocket(wss);
+    // log(`WebSocket server ready for real-time sync`);
   });
 })();

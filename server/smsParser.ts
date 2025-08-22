@@ -184,31 +184,148 @@ export class MpesaSmsParser {
     return undefined;
   }
 
-  // Detect SIM card from sender number or SMS content
+  // Enhanced SIM detection patterns for Kenyan carriers
+  private static readonly SIM_DETECTION_PATTERNS = {
+    SAFARICOM_BUSINESS: [
+      /from.*MPESA/i,
+      /from.*M-PESA/i,
+      /safaricom.*business/i,
+      /254722|254733|254734|254735|254736|254737|254738|254739/
+    ],
+    SAFARICOM_PERSONAL: [
+      /from.*254700|254701|254702|254703|254704|254705|254706|254707|254708|254709/,
+      /personal.*safaricom/i
+    ],
+    AIRTEL: [
+      /airtel/i,
+      /airtel money/i,
+      /254730|254731|254732|254733|254734|254735|254736|254737|254738|254739/
+    ],
+    TELKOM: [
+      /telkom/i,
+      /t-kash/i,
+      /tkash/i,
+      /254777/
+    ]
+  };
+
+  // Enhanced SIM card detection with carrier and account type identification
   public static detectSimCard(senderNumber: string, smsText: string): 'SIM1' | 'SIM2' {
-    // This would be enhanced based on actual device SMS metadata
-    // For now, we'll use a simple heuristic or default to SIM1
-    // In a real implementation, this would come from Android SMS metadata
-    return 'SIM1'; // Default - would be determined by actual SMS metadata
+    // Check for business patterns (typically SIM1 for business)
+    const hasBusinessPattern = this.SIM_DETECTION_PATTERNS.SAFARICOM_BUSINESS.some(pattern => 
+      pattern.test(senderNumber) || pattern.test(smsText)
+    );
+    
+    // Check for personal patterns (typically SIM2 for personal)
+    const hasPersonalPattern = this.SIM_DETECTION_PATTERNS.SAFARICOM_PERSONAL.some(pattern => 
+      pattern.test(senderNumber) || pattern.test(smsText)
+    );
+    
+    // Advanced heuristics based on time and transaction amount
+    const now = new Date();
+    const isBusinessHours = now.getHours() >= 8 && now.getHours() <= 18;
+    
+    // Extract amount for business/personal classification
+    const amountMatch = smsText.match(/ksh\s*([\d,\.]+)/i);
+    const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+    const isLargeAmount = amount > 5000;
+    
+    // Decision logic
+    if (hasBusinessPattern || (isBusinessHours && isLargeAmount)) {
+      return 'SIM1'; // Business SIM
+    } else if (hasPersonalPattern || (!isBusinessHours && amount < 2000)) {
+      return 'SIM2'; // Personal SIM
+    }
+    
+    // Default to SIM1 for M-Pesa transactions during business hours
+    return isBusinessHours ? 'SIM1' : 'SIM2';
   }
 
-  // Determine if transaction is likely business or personal based on patterns
+  // Get carrier information from SIM detection
+  public static getCarrierInfo(senderNumber: string, smsText: string): {
+    carrier: 'SAFARICOM' | 'AIRTEL' | 'TELKOM' | 'UNKNOWN';
+    accountType: 'BUSINESS' | 'PERSONAL';
+    confidence: number;
+  } {
+    let carrier: 'SAFARICOM' | 'AIRTEL' | 'TELKOM' | 'UNKNOWN' = 'UNKNOWN';
+    let accountType: 'BUSINESS' | 'PERSONAL' = 'BUSINESS';
+    let confidence = 0.5;
+
+    // Detect carrier
+    if (this.SIM_DETECTION_PATTERNS.SAFARICOM_BUSINESS.some(p => p.test(senderNumber) || p.test(smsText))) {
+      carrier = 'SAFARICOM';
+      accountType = 'BUSINESS';
+      confidence = 0.9;
+    } else if (this.SIM_DETECTION_PATTERNS.SAFARICOM_PERSONAL.some(p => p.test(senderNumber) || p.test(smsText))) {
+      carrier = 'SAFARICOM';
+      accountType = 'PERSONAL';
+      confidence = 0.8;
+    } else if (this.SIM_DETECTION_PATTERNS.AIRTEL.some(p => p.test(senderNumber) || p.test(smsText))) {
+      carrier = 'AIRTEL';
+      confidence = 0.7;
+    } else if (this.SIM_DETECTION_PATTERNS.TELKOM.some(p => p.test(senderNumber) || p.test(smsText))) {
+      carrier = 'TELKOM';
+      confidence = 0.7;
+    }
+
+    return { carrier, accountType, confidence };
+  }
+
+  // Enhanced business/personal classification with multiple factors
   public static classifyAccountType(recipientName?: string, amount?: number): 'business' | 'personal' {
     if (!recipientName && !amount) return 'business'; // Default to business
     
-    // Business indicators
+    // Business indicators - expanded list
     const businessKeywords = [
-      'supplier', 'vendor', 'wholesale', 'ltd', 'limited', 'company', 'shop', 
-      'store', 'market', 'traders', 'distributors', 'services'
+      // Formal business
+      'supplier', 'vendor', 'wholesale', 'ltd', 'limited', 'company', 'corp', 'corporation',
+      'shop', 'store', 'market', 'traders', 'distributors', 'services', 'enterprise',
+      
+      // Hotel-specific suppliers
+      'catering', 'supplies', 'laundry', 'maintenance', 'security', 'transport',
+      'hospitality', 'equipment', 'furniture', 'fixtures', 'uniforms',
+      
+      // Utilities and services
+      'kenya power', 'kplc', 'nairobi water', 'safaricom', 'airtel', 'telkom',
+      'internet', 'communication', 'insurance', 'legal', 'accounting',
+      
+      // Construction and maintenance
+      'hardware', 'construction', 'plumbing', 'electrical', 'painting', 'roofing'
+    ];
+    
+    // Personal indicators - expanded list
+    const personalKeywords = [
+      'personal', 'family', 'friend', 'loan', 'borrow', 'gift', 'pocket', 'allowance',
+      'school', 'medical', 'health', 'entertainment', 'shopping', 'groceries', 'food',
+      'rent', 'house', 'home', 'children', 'kids', 'spouse', 'parent', 'relative',
+      'birthday', 'wedding', 'celebration', 'emergency', 'doctor', 'hospital'
     ];
     
     const recipientLower = recipientName?.toLowerCase() || '';
     const hasBusinessKeyword = businessKeywords.some(keyword => recipientLower.includes(keyword));
+    const hasPersonalKeyword = personalKeywords.some(keyword => recipientLower.includes(keyword));
     
-    // Large amounts often indicate business transactions
-    const isLargeAmount = amount && amount > 5000;
+    // Amount-based classification (refined thresholds)
+    const isLargeAmount = amount && amount > 10000; // Raised threshold for business
+    const isSmallPersonalAmount = amount && amount < 2000; // Small amounts likely personal
     
-    return hasBusinessKeyword || isLargeAmount ? 'business' : 'personal';
+    // Time-based heuristics
+    const now = new Date();
+    const isBusinessHours = now.getHours() >= 8 && now.getHours() <= 18;
+    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+    
+    // Decision logic with weighted factors
+    let businessScore = 0;
+    let personalScore = 0;
+    
+    if (hasBusinessKeyword) businessScore += 3;
+    if (hasPersonalKeyword) personalScore += 3;
+    if (isLargeAmount) businessScore += 2;
+    if (isSmallPersonalAmount) personalScore += 1;
+    if (isBusinessHours && !isWeekend) businessScore += 1;
+    if (!isBusinessHours || isWeekend) personalScore += 1;
+    
+    return businessScore >= personalScore ? 'business' : 'personal';
   }
 
   // Suggest purpose/item based on recipient name and transaction context

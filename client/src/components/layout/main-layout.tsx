@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import Header from "./header";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, WifiOff } from "lucide-react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,6 +13,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location] = useLocation();
+  const { isConnected, connectedDevices } = useRealtimeSync();
 
   const getPageTitle = () => {
     const titles: { [key: string]: string } = {
@@ -34,6 +38,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
           onMenuClick={() => setSidebarOpen(true)} 
           title={getPageTitle()}
         />
+        
+        {/* Real-time sync status - temporarily disabled */}
+        {/* <div className="fixed top-4 right-4 z-50">
+          <Badge 
+            variant={isConnected ? "default" : "destructive"}
+            className="flex items-center space-x-1"
+          >
+            {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            <span>{isConnected ? `${connectedDevices} device(s)` : 'Offline'}</span>
+          </Badge>
+        </div> */}
         
         <main className="yasinga-fade-in">
           {children}

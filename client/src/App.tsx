@@ -14,6 +14,7 @@ import TrackPayments from "@/pages/track-payments";
 import Reports from "@/pages/reports";
 import SmsConfirmation from "@/pages/sms-confirmation";
 import PersonalTracking from "@/pages/personal-tracking";
+import SIMManagement from "@/pages/sim-management";
 import MainLayout from "@/components/layout/main-layout";
 
 function Router() {
@@ -58,6 +59,11 @@ function Router() {
           <Route path="/personal-tracking" component={() => (
             <MainLayout>
               <PersonalTracking />
+            </MainLayout>
+          )} />
+          <Route path="/sim-management" component={() => (
+            <MainLayout>
+              <SIMManagement />
             </MainLayout>
           )} />
         </>
