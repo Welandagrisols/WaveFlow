@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import * as schema from "@shared/schema";
 
 // Use Supabase connection
-const connectionString = process.env.DATABASE_URL || `postgresql://postgres:[YOUR-PASSWORD]@db.${process.env.SUPABASE_URL?.split('//')[1]?.split('.')[0]}.supabase.co:5432/postgres`;
+const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
 
 if (!connectionString) {
   throw new Error(
