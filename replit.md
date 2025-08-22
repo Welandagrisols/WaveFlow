@@ -102,3 +102,14 @@ The UI architecture prioritizes mobile experience:
 - **memoizee** - Function memoization for performance optimization
 
 The architecture prioritizes type safety, developer experience, and scalability while maintaining focus on the mobile-first user experience for expense tracking workflows.
+
+## Recent Changes
+
+### Migration to Replit (August 22, 2025)
+- Successfully migrated project from Replit Agent to Replit environment
+- Configured Supabase database integration with user-provided credentials
+- Set up PostgreSQL database with all required tables and schema
+- Established proper client/server separation with Express backend and React frontend
+- Implemented Replit Auth integration with OpenID Connect
+- All core functionality verified and working: authentication, transactions, categories, SMS parsing, and reporting features
+- Project now fully operational on Replit with secure database connections
