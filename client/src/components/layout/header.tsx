@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, Search, Bell, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PWAStatus } from "@/components/PWAStatus";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -34,6 +35,9 @@ export default function Header({ onMenuClick, title }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* PWA Status */}
+          <PWAStatus />
+          
           {/* Search */}
           <div className="relative hidden sm:block">
             <Input
