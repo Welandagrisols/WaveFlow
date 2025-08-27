@@ -3,5 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/dashboard": "pages/dashboard.js"
+  "/dashboard": "pages/dashboard.js",
+  "/api/transactions": "pages/api/transactions.js",
+  "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js"
 }
