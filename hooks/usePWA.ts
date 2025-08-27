@@ -13,11 +13,17 @@ interface BeforeInstallPromptEvent extends Event {
 export function usePWA() {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    // Initialize offline status
+    setIsOffline(!navigator.onLine);
+    
     // Check if app is already installed
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
