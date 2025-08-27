@@ -71,10 +71,8 @@ export function useRealtimeSync() {
   }, [isConnected]);
 
   useEffect(() => {
-    // Auto-connect on mount if supabase is available
-    if (supabase) {
-      connect();
-    }
+    // Auto-connect on mount - works in both demo and real mode
+    connect();
 
     // Cleanup on unmount
     return () => {
