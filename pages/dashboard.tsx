@@ -1,10 +1,11 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Smartphone, 
@@ -19,7 +20,11 @@ import {
   ArrowRight,
   Wallet,
   Send,
-  Settings
+  Settings,
+  Home,
+  CreditCard,
+  Activity,
+  Bell
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -74,61 +79,130 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const navigationCards = [
-    {
-      title: 'Transactions',
-      description: 'View all transactions',
-      icon: List,
-      href: '/transactions',
-      color: 'blue',
-      count: summary?.totalTransactions || 0
-    },
-    {
-      title: 'Send Money',
-      description: 'Send M-Pesa payments',
-      icon: Send,
-      href: '/send-money',
-      color: 'green',
-      highlight: true
-    },
-    {
-      title: 'SMS Processing',
-      description: 'Process M-Pesa SMS',
-      icon: MessageSquare,
-      href: '/sms-confirmation',
-      color: 'orange',
-      count: unconfirmedSms?.length || 0,
-      urgent: (unconfirmedSms?.length || 0) > 0
-    },
-    {
-      title: 'Reports',
-      description: 'View analytics',
-      icon: BarChart3,
-      href: '/reports',
-      color: 'purple'
-    },
-    {
-      title: 'Track Payments',
-      description: 'Monitor payment status',
-      icon: Clock,
-      href: '/track-payments',
-      color: 'amber'
-    },
-    {
-      title: 'Personal Tracking',
-      description: 'Personal expenses',
-      icon: User,
-      href: '/personal-tracking',
-      color: 'indigo'
-    },
-    {
-      title: 'SIM Management',
-      description: 'Manage SIM cards',
-      icon: Smartphone,
-      href: '/sim-management',
-      color: 'cyan'
-    }
-  ];
+  // Quick Action Cards for each section
+  const quickActions = {
+    home: [
+      {
+        title: 'Send Money',
+        description: 'Quick M-Pesa payment',
+        icon: Send,
+        href: '/send-money',
+        color: 'bg-green-500',
+        highlight: true
+      },
+      {
+        title: 'SMS Processing',
+        description: `${unconfirmedSms?.length || 0} pending`,
+        icon: MessageSquare,
+        href: '/sms-confirmation',
+        color: 'bg-orange-500',
+        urgent: (unconfirmedSms?.length || 0) > 0
+      }
+    ],
+    transactions: [
+      {
+        title: 'All Transactions',
+        description: `${summary?.totalTransactions || 0} total`,
+        icon: List,
+        href: '/transactions',
+        color: 'bg-blue-500'
+      },
+      {
+        title: 'Send Money',
+        description: 'New payment',
+        icon: Send,
+        href: '/send-money',
+        color: 'bg-green-500'
+      },
+      {
+        title: 'Track Payments',
+        description: 'Monitor status',
+        icon: Clock,
+        href: '/track-payments',
+        color: 'bg-amber-500'
+      }
+    ],
+    sms: [
+      {
+        title: 'Process SMS',
+        description: `${unconfirmedSms?.length || 0} unconfirmed`,
+        icon: MessageSquare,
+        href: '/sms-confirmation',
+        color: 'bg-orange-500',
+        urgent: (unconfirmedSms?.length || 0) > 0
+      },
+      {
+        title: 'SMS Guide',
+        description: 'Setup instructions',
+        icon: Settings,
+        href: '/sms-guide',
+        color: 'bg-purple-500'
+      }
+    ],
+    analytics: [
+      {
+        title: 'Reports',
+        description: 'Business insights',
+        icon: BarChart3,
+        href: '/reports',
+        color: 'bg-purple-500'
+      },
+      {
+        title: 'Personal Tracking',
+        description: 'Personal expenses',
+        icon: User,
+        href: '/personal-tracking',
+        color: 'bg-indigo-500'
+      }
+    ],
+    settings: [
+      {
+        title: 'SIM Management',
+        description: 'Manage SIM cards',
+        icon: Smartphone,
+        href: '/sim-management',
+        color: 'bg-cyan-500'
+      },
+      {
+        title: 'Account Settings',
+        description: 'Profile & preferences',
+        icon: Settings,
+        href: '/settings',
+        color: 'bg-gray-500'
+      }
+    ]
+  };
+
+  // Render action cards for each section
+  const renderActionCards = (actions: any[]) => (
+    <div className="grid grid-cols-1 gap-4">
+      {actions.map((action) => {
+        const IconComponent = action.icon;
+        return (
+          <Card 
+            key={action.title}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] ${
+              action.highlight ? 'ring-2 ring-green-500 bg-green-50' : ''
+            } ${action.urgent ? 'ring-2 ring-orange-500 bg-orange-50' : ''}`}
+            onClick={() => router.push(action.href)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                  <IconComponent className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900">{action.title}</h3>
+                  <p className="text-sm text-slate-600">{action.description}</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400" />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -152,92 +226,143 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Stats */}
+      {/* Main Content with Tabs */}
       <div className="p-4">
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Total In</p>
-                  <p className="text-lg font-bold text-green-800">
-                    KES {summary?.totalIn?.toLocaleString() || '0'}
-                  </p>
-                </div>
-                <TrendingDown className="w-6 h-6 text-green-600 rotate-180" />
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="home" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="home" className="text-xs">
+              <Home className="w-4 h-4 mr-1" />
+              Home
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs">
+              <CreditCard className="w-4 h-4 mr-1" />
+              Money
+            </TabsTrigger>
+            <TabsTrigger value="sms" className="text-xs">
+              <MessageSquare className="w-4 h-4 mr-1" />
+              SMS
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs">
+              <BarChart3 className="w-4 h-4 mr-1" />
+              Reports
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs">
+              <Settings className="w-4 h-4 mr-1" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-red-50 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Total Out</p>
-                  <p className="text-lg font-bold text-red-800">
-                    KES {summary?.totalOut?.toLocaleString() || '0'}
-                  </p>
-                </div>
-                <TrendingDown className="w-6 h-6 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Navigation Cards */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h2>
-          
-          {navigationCards.map((card) => {
-            const IconComponent = card.icon;
-            return (
-              <Card 
-                key={card.title} 
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md active:scale-98 ${
-                  card.highlight ? 'ring-2 ring-green-500 bg-green-50' : ''
-                } ${card.urgent ? 'ring-2 ring-orange-500 bg-orange-50' : ''}`}
-                onClick={() => router.push(card.href)}
-              >
+          {/* Home Tab */}
+          <TabsContent value="home" className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-green-50 border-green-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 bg-${card.color}-100 rounded-lg flex items-center justify-center`}>
-                        <IconComponent className={`w-5 h-5 text-${card.color}-600`} />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-slate-800">{card.title}</h3>
-                        <p className="text-sm text-slate-600">{card.description}</p>
-                      </div>
+                    <div>
+                      <p className="text-sm text-green-600 font-medium">Total In</p>
+                      <p className="text-lg font-bold text-green-800">
+                        KES {summary?.totalIn?.toLocaleString() || '0'}
+                      </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {card.count !== undefined && (
-                        <Badge 
-                          variant={card.urgent ? "destructive" : "secondary"}
-                          className="ml-2"
-                        >
-                          {card.count}
-                        </Badge>
-                      )}
-                      <ArrowRight className="w-4 h-4 text-slate-400" />
+                    <TrendingDown className="w-6 h-6 text-green-600 rotate-180" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-red-600 font-medium">Total Out</p>
+                      <p className="text-lg font-bold text-red-800">
+                        KES {summary?.totalOut?.toLocaleString() || '0'}
+                      </p>
+                    </div>
+                    <TrendingDown className="w-6 h-6 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Notifications */}
+            {unconfirmedSms?.length > 0 && (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <Bell className="w-5 h-5 text-orange-600" />
+                    <div>
+                      <p className="text-sm font-medium text-orange-800">
+                        You have {unconfirmedSms.length} unconfirmed SMS transactions
+                      </p>
+                      <Button 
+                        variant="link" 
+                        className="text-orange-600 p-0 h-auto"
+                        onClick={() => router.push('/sms-confirmation')}
+                      >
+                        Process now →
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+            )}
 
-        {/* Quick Add Transaction */}
-        <div className="mt-6">
-          <Button 
-            onClick={() => router.push('/send-money')}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
-            size="lg"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Quick Send Money
-          </Button>
-        </div>
+            {/* Quick Actions */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-slate-800">Quick Actions</h2>
+              {renderActionCards(quickActions.home)}
+            </div>
+          </TabsContent>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Money Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderActionCards(quickActions.transactions)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* SMS Tab */}
+          <TabsContent value="sms" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">SMS Processing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderActionCards(quickActions.sms)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Reports & Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderActionCards(quickActions.analytics)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Settings & Configuration</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderActionCards(quickActions.settings)}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

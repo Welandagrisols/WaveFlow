@@ -14,5 +14,11 @@
   "node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
     "id": "node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch",
     "files": []
+  },
+  "pages/login.tsx -> ../lib/supabase": {
+    "id": "pages/login.tsx -> ../lib/supabase",
+    "files": [
+      "static/chunks/_pages-dir-browser_lib_supabase_ts.js"
+    ]
   }
 }
