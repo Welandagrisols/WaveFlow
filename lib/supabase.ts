@@ -2,18 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables with fallbacks for development
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+console.log('Raw process.env.NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log('Supabase URL:', supabaseUrl);
 console.log('Supabase Key exists:', !!supabaseKey);
 
-// In development mode, use mock configuration
-const isDevelopment = process.env.NODE_ENV === 'development';
+// Validate URL format
+const isValidUrl = supabaseUrl && supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
 
-// Only validate in production
-if (!isDevelopment && (!supabaseUrl || supabaseUrl === 'https://demo.supabase.co')) {
-  console.warn('Supabase not configured, running in demo mode');
+if (!isValidUrl) {
+  console.warn('Invalid Supabase URL format. Expected: https://xxx.supabase.co');
+  console.warn('Running in demo mode without Supabase');
+  export const supabase = null;
+} else {
+  export const supabase = createClient(supabaseUrl, supabaseKey || '');
 }
-
-export const supabase = createClient(supabaseUrl, supabaseKey);

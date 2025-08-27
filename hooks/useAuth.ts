@@ -12,6 +12,11 @@ export function useAuth() {
 
     const getSession = async () => {
       try {
+        // Ensure we're on the client side
+        if (typeof window === 'undefined') {
+          return;
+        }
+
         if (!supabase) {
           // In development without Supabase, create mock user
           if (process.env.NODE_ENV === 'development' && mounted) {
