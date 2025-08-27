@@ -105,6 +105,15 @@ The architecture prioritizes type safety, developer experience, and scalability 
 
 ## Recent Changes
 
+### Critical Service Worker Fix (August 27, 2025)
+- **RESOLVED 2-week 404 error issue** - Service worker was serving stale cached content
+- Completely removed problematic service worker registration from main.tsx
+- Fixed client-side routing logic in App.tsx for proper authentication handling  
+- Updated Supabase client configuration to handle missing environment variables gracefully
+- App now loads fresh content every time, no more cache-related issues
+- Landing page displays correctly for unauthenticated users
+- **IMPORTANT**: Service worker functionality disabled to prevent future caching issues
+
 ### Migration to Replit (August 22, 2025)
 - Successfully migrated project from Replit Agent to Replit environment
 - Configured Supabase database integration with user-provided credentials
