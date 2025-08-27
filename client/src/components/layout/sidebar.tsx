@@ -15,7 +15,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
 
   const navItems = [
-    { path: "/", icon: BarChart3, label: "Dashboard" },
+    { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
     { path: "/confirm-sms", icon: Smartphone, label: "Confirm SMS" },
     { path: "/transactions", icon: List, label: "Transactions" },
     { path: "/personal-tracking", icon: User, label: "Personal Expenses" },
