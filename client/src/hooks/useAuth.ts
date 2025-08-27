@@ -1,6 +1,6 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export function useAuth() {
@@ -9,20 +9,30 @@ export function useAuth() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!supabase) {
+    if (!isSupabaseConfigured) {
+      // Demo mode - simulate logged in user
+      setUser({ 
+        id: 'demo-user', 
+        email: 'demo@yasinga.com',
+        user_metadata: { name: 'Demo User' }
+      });
       setLoading(false);
       return;
     }
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase!.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+      }
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
         
@@ -37,23 +47,49 @@ export function useAuth() {
   }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signInWithPassword({ email, password });
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase not configured - running in demo mode');
+    }
+    const result = await supabase!.auth.signInWithPassword({ email, password });
+    if (result.error) {
+      throw result.error;
+    }
+    return result;
   };
 
   const signUp = async (email: string, password: string) => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signUp({ email, password });
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase not configured - running in demo mode');
+    }
+    const result = await supabase!.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+    if (result.error) {
+      throw result.error;
+    }
+    return result;
   };
 
   const signOut = async () => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signOut();
+    if (!isSupabaseConfigured) {
+      // Demo mode - just reload
+      window.location.reload();
+      return;
+    }
+    const result = await supabase!.auth.signOut();
+    if (result.error) {
+      throw result.error;
+    }
+    return result;
   };
 
   const getAccessToken = async () => {
-    if (!supabase) return null;
-    const { data: { session } } = await supabase.auth.getSession();
+    if (!isSupabaseConfigured) return 'demo-token';
+    const { data: { session } } = await supabase!.auth.getSession();
     return session?.access_token || null;
   };
 
@@ -65,5 +101,6 @@ export function useAuth() {
     signOut,
     getAccessToken,
     isAuthenticated: !!user,
+    isSupabaseConfigured,
   };
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import TransactionItem from "@/components/financial/transaction-item";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { supabaseApi } from "@/lib/api";
 import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +48,7 @@ const unconfirmedSmsCount = 5;
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isSupabaseConfigured } = useAuth();
   const [showWelcome, setShowWelcome] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -70,17 +71,20 @@ export default function Dashboard() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["supabase-transactions"],
+    queryFn: () => supabaseApi.getTransactions(),
     enabled: isAuthenticated,
   });
 
   const { data: summary, isLoading: summaryLoading } = useQuery<SummaryData>({
-    queryKey: ["/api/transactions/summary"],
+    queryKey: ["supabase-summary"],
+    queryFn: () => supabaseApi.getTransactionSummary(),
     enabled: isAuthenticated,
   });
 
   const { data: categoryData = [], isLoading: categoryLoading } = useQuery<CategoryData[]>({
-    queryKey: ["/api/transactions/by-category"],
+    queryKey: ["supabase-categories"],
+    queryFn: () => supabaseApi.getCategories(),
     enabled: isAuthenticated,
   });
 
