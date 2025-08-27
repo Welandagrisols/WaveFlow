@@ -130,6 +130,12 @@ type ApiRouteConfig = {
   handler satisfies ApiRouteConfig
 }
 
+// Validate ../../pages/api/login/index.ts
+{
+  const handler = {} as typeof import("../../pages/api/login/index.js")
+  handler satisfies ApiRouteConfig
+}
+
 // Validate ../../pages/api/payment-reminders/index.ts
 {
   const handler = {} as typeof import("../../pages/api/payment-reminders/index.js")
@@ -151,6 +157,18 @@ type ApiRouteConfig = {
 // Validate ../../pages/api/sms-transactions/index.ts
 {
   const handler = {} as typeof import("../../pages/api/sms-transactions/index.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/sms-transactions/unconfirmed.ts
+{
+  const handler = {} as typeof import("../../pages/api/sms-transactions/unconfirmed.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/suppliers/index.ts
+{
+  const handler = {} as typeof import("../../pages/api/suppliers/index.js")
   handler satisfies ApiRouteConfig
 }
 
