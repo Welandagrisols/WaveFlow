@@ -2,6 +2,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import Dashboard from "@/components/pages/Dashboard";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -25,7 +26,5 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Import and use the dashboard component dynamically
-  const Dashboard = require("../client/src/pages/dashboard").default;
   return <Dashboard />;
 }
