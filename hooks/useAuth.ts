@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { supabase } from "./supabaseClient"; // Assuming supabase client is exported from here
-import { useQuery } from '@tanstack/react-query';
 
-// Simple user type for the application
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+
 export interface User {
   id: string;
   email: string;
@@ -12,50 +11,112 @@ export interface User {
 }
 
 export const useAuth = () => {
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ['/api/auth/user'],
-    retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    queryFn: async () => {
-      // Use Supabase client-side auth instead of API
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if supabase is configured
+    if (!supabase) {
+      // Try to get user from localStorage for demo mode
+      const storedUser = localStorage.getItem('yasinga_user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+        }
+      }
+      setLoading(false);
+      return;
     }
-  });
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            firstName: session.user.user_metadata?.first_name || '',
+            lastName: session.user.user_metadata?.last_name || '',
+            businessName: session.user.user_metadata?.business_name || ''
+          };
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            firstName: session.user.user_metadata?.first_name || '',
+            lastName: session.user.user_metadata?.last_name || '',
+            businessName: session.user.user_metadata?.business_name || ''
+          };
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    // Optionally clear local storage if you're managing user state there as well
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    // Clear localStorage
     localStorage.removeItem('yasinga_user');
-    // Depending on how you handle state, you might want to reset it here or let the query refetch
+    setUser(null);
   };
 
   const updateUser = async (userData: Partial<User>) => {
-    if (user) {
-      const { data: updatedUser, error } = await supabase.auth.updateUser({
-        data: userData
-      });
-      if (error) {
+    if (supabase && user) {
+      try {
+        const { error } = await supabase.auth.updateUser({
+          data: userData
+        });
+        if (error) {
+          console.error('Error updating user:', error);
+          return;
+        }
+        // Update local state
+        setUser(prev => prev ? { ...prev, ...userData } : null);
+      } catch (error) {
         console.error('Error updating user:', error);
-        return;
       }
-      // Supabase might return the updated user in the data
-      // If not, you might need to refetch or manually update your local state
-      // For simplicity, let's assume we update local state directly if the update call succeeds without error
-      // In a real app, you'd likely want to refetch or have a more robust state management
-      if (updatedUser) {
-        setUser(updatedUser); // Assuming the returned user object contains all necessary fields
+    } else {
+      // Demo mode - update localStorage
+      if (user) {
+        const updatedUser = { ...user, ...userData };
+        setUser(updatedUser);
         localStorage.setItem('yasinga_user', JSON.stringify(updatedUser));
-      } else {
-        // If updateUser doesn't return the full user object, you might need to refetch
-        // For now, we'll assume it's handled by the query refetching after a mutation
       }
     }
   };
 
-  // If you need to manage local state for immediate UI updates before query refetch,
-  // you can use useState as in the original, but ensure it's synced with Supabase data.
-  // For this correction, we'll rely on the query's data and isLoading/error states.
-
-  return { user, loading: isLoading, logout, updateUser, error };
+  return { 
+    user, 
+    loading, 
+    logout, 
+    updateUser,
+    isAuthenticated: !!user,
+    isLoading: loading
+  };
 };
