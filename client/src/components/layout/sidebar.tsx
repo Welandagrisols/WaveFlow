@@ -15,14 +15,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
 
   const navItems = [
-    { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
-    { path: "/confirm-sms", icon: Smartphone, label: "Confirm SMS" },
-    { path: "/transactions", icon: List, label: "Transactions" },
-    { path: "/personal-tracking", icon: User, label: "Personal Expenses" },
-    { path: "/sim-management", icon: Smartphone, label: "SIM Management" },
-    { path: "/send-money", icon: Send, label: "Send Money" },
-    { path: "/track-payments", icon: Search, label: "Track Payments" },
-    { path: "/reports", icon: FileText, label: "Reports" },
+    // Core Features
+    { path: "/dashboard", icon: BarChart3, label: "Dashboard", section: "main" },
+    { path: "/transactions", icon: List, label: "Transactions", section: "main" },
+    { path: "/send-money", icon: Send, label: "Send Money", section: "main" },
+    
+    // SMS & Tracking
+    { path: "/sms-confirmation", icon: Smartphone, label: "SMS Confirmation", section: "sms" },
+    { path: "/track-payments", icon: Search, label: "Track Payments", section: "sms" },
+    
+    // Personal & Reports
+    { path: "/personal-tracking", icon: User, label: "Personal Expenses", section: "personal" },
+    { path: "/reports", icon: FileText, label: "Reports", section: "personal" },
+    { path: "/sim-management", icon: Smartphone, label: "SIM Management", section: "personal" },
   ];
 
   const handleNavigation = (path: string) => {
@@ -68,26 +73,84 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.path;
-            
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNavigation(item.path)}
-                className={cn(
-                  "yasinga-sidebar-nav w-full",
-                  isActive && "active"
-                )}
-                data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="p-4 space-y-1">
+          {/* Main Features */}
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-2">
+              Main
+            </p>
+            {navItems.filter(item => item.section === 'main').map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={cn(
+                    "yasinga-sidebar-nav w-full",
+                    isActive && "active"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* SMS & Tracking */}
+          <div className="space-y-1 pt-4">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-2">
+              SMS & Tracking
+            </p>
+            {navItems.filter(item => item.section === 'sms').map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={cn(
+                    "yasinga-sidebar-nav w-full",
+                    isActive && "active"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Personal & Reports */}
+          <div className="space-y-1 pt-4">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider px-3 py-2">
+              Personal & Reports
+            </p>
+            {navItems.filter(item => item.section === 'personal').map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={cn(
+                    "yasinga-sidebar-nav w-full",
+                    isActive && "active"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </nav>
 
         {/* User Profile */}

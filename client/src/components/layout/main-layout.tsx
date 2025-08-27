@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import Header from "./header";
+import MobileNavigation from "./mobile-navigation";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Badge } from "@/components/ui/badge";
 import { Wifi, WifiOff } from "lucide-react";
@@ -28,20 +29,20 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 app-content ios-safe-area">
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
-      
+
       <div className="lg:ml-64">
-        <Header 
-          onMenuClick={() => setSidebarOpen(true)} 
+        <Header
+          onMenuClick={() => setSidebarOpen(true)}
           title={getPageTitle()}
         />
-        
+
         {/* Real-time sync status - temporarily disabled */}
         {/* <div className="fixed top-4 right-4 z-50">
-          <Badge 
+          <Badge
             variant={isConnected ? "default" : "destructive"}
             className="flex items-center space-x-1"
           >
@@ -49,10 +50,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <span>{isConnected ? `${connectedDevices} device(s)` : 'Offline'}</span>
           </Badge>
         </div> */}
-        
-        <main className="yasinga-fade-in">
+
+        <main className="yasinga-fade-in pb-20 lg:pb-0">
           {children}
         </main>
+        <MobileNavigation />
       </div>
     </div>
   );

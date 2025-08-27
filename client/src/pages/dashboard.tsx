@@ -313,52 +313,84 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Enhanced Quick Actions */}
+          {/* Simplified Quick Actions - Mobile Optimized */}
           <div className="space-y-6 yasinga-fade-in">
             <Card className="wave-card bg-white">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-teal-600" />
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-teal-600" />
                   </div>
-                  <CardTitle className="text-xl font-medium text-slate-800">
+                  <CardTitle className="text-lg font-medium text-slate-800">
                     Quick Actions
                   </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={() => window.location.href = '/send-money'}
+                    className="h-20 flex-col wave-button-primary hover-lift"
+                  >
+                    <Send className="h-6 w-6 mb-2" />
+                    <span className="text-sm font-medium">Send Money</span>
+                  </Button>
+                  <Button
+                    onClick={() => window.location.href = '/sms-confirmation'}
+                    variant="outline"
+                    className="h-20 flex-col border-orange-200 text-orange-700 hover:bg-orange-50 hover-lift"
+                  >
+                    <MessageSquare className="h-6 w-6 mb-2" />
+                    <span className="text-sm font-medium">Confirm SMS</span>
+                    {unconfirmedSmsCount > 0 && (
+                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
+                        {unconfirmedSmsCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
                 <Button
-                  onClick={() => window.location.href = '/send-money'}
-                  className="w-full wave-button-primary justify-start h-14 text-left hover-lift"
-                >
-                  <Send className="mr-4 h-5 w-5" />
-                  <div className="text-left">
-                    <div className="font-medium">Send Money</div>
-                    <div className="text-sm opacity-90">Transfer funds instantly</div>
-                  </div>
-                </Button>
-                <Button
-                  onClick={() => window.location.href = '/track-payments'}
+                  onClick={() => window.location.href = '/transactions'}
                   variant="outline"
-                  className="w-full justify-start h-12 border-yasinga-primary text-yasinga-primary hover:bg-yasinga-primary hover:text-white shadow-sm hover:shadow-md transition-all duration-200"
+                  className="w-full h-12 justify-start border-slate-200 hover:bg-slate-50"
                 >
-                  <TrendingUp className="mr-3 h-5 w-5" />
-                  <div className="text-left">
-                    <div className="font-semibold">Track Payments</div>
-                    <div className="text-xs opacity-70">Monitor transactions</div>
-                  </div>
+                  <List className="mr-3 h-5 w-5 text-slate-600" />
+                  <span className="font-medium text-slate-700">View All Transactions</span>
                 </Button>
-                <Button
-                  onClick={() => window.location.href = '/reports'}
-                  variant="outline"
-                  className="w-full justify-start h-12 border-yasinga-secondary text-yasinga-secondary hover:bg-yasinga-secondary hover:text-white shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  <BarChart3 className="mr-3 h-5 w-5" />
-                  <div className="text-left">
-                    <div className="font-semibold">View Reports</div>
-                    <div className="text-xs opacity-70">Analyze spending</div>
-                  </div>
-                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Mobile Navigation Grid */}
+            <Card className="wave-card bg-white lg:hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-medium text-slate-800">
+                  More Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <button
+                    onClick={() => window.location.href = '/reports'}
+                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <BarChart3 className="h-6 w-6 text-slate-600 mb-2" />
+                    <span className="text-xs font-medium text-slate-700">Reports</span>
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/track-payments'}
+                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <Search className="h-6 w-6 text-slate-600 mb-2" />
+                    <span className="text-xs font-medium text-slate-700">Track</span>
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/personal-tracking'}
+                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <User className="h-6 w-6 text-slate-600 mb-2" />
+                    <span className="text-xs font-medium text-slate-700">Personal</span>
+                  </button>
+                </div>
               </CardContent>
             </Card>
           </div>
