@@ -2,5 +2,9 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js"
+  "/": "pages/index.js",
+  "/confirm-sms": "pages/confirm-sms.js",
+  "/api/categories": "pages/api/categories.js",
+  "/transactions": "pages/transactions.js",
+  "/api/transactions": "pages/api/transactions.js"
 }
