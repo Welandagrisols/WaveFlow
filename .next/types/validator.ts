@@ -166,6 +166,12 @@ type ApiRouteConfig = {
   handler satisfies ApiRouteConfig
 }
 
+// Validate ../../pages/api/sms/auto-process.ts
+{
+  const handler = {} as typeof import("../../pages/api/sms/auto-process.js")
+  handler satisfies ApiRouteConfig
+}
+
 // Validate ../../pages/api/suppliers.ts
 {
   const handler = {} as typeof import("../../pages/api/suppliers.js")

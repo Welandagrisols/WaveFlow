@@ -2,8 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
+  "/": "pages/index.js",
   "/dashboard": "pages/dashboard.js",
   "/api/transactions": "pages/api/transactions.js",
-  "/": "pages/index.js",
   "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js"
 }
