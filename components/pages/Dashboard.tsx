@@ -77,59 +77,62 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="space-y-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Get Started with Yasinga</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Start Automatic M-Pesa Tracking</h2>
                   <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto">
-                    Start tracking your M-Pesa transactions by adding your first SMS or transaction
+                    Yasinga automatically detects your M-Pesa transactions from SMS messages and tracks your business expenses in real-time
                   </p>
                 </div>
 
-                {/* Featured: Auto-Detection */}
-                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-3">
-                    <Zap className="w-6 h-6 text-yellow-600" />
-                    <h3 className="font-bold text-yellow-800 text-lg">NEW: Automatic SMS Detection</h3>
+                {/* Main Feature: Auto-Detection */}
+                <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg p-6 mb-6 text-white">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <Zap className="w-8 h-8 text-white" />
+                    <h3 className="font-bold text-white text-xl">Automatic SMS Detection</h3>
                   </div>
-                  <p className="text-yellow-700 text-center text-sm mb-4">
-                    Let Yasinga automatically detect and process your M-Pesa SMS messages in real-time. 
-                    No more manual entry!
+                  <p className="text-blue-100 text-center text-sm mb-6 max-w-lg mx-auto">
+                    The smart way to track M-Pesa transactions. Yasinga monitors your SMS messages, 
+                    automatically extracts transaction data, and categorizes expenses for your business.
                   </p>
                   <div className="text-center">
                     <Link href="/sms-auto-detect">
-                      <Button className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Try Auto-Detection
+                      <Button className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-medium">
+                        <Zap className="w-5 h-5 mr-3" />
+                        Start Auto-Detection
                       </Button>
                     </Link>
                   </div>
+                  
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white mb-1">Real-time</div>
+                      <div className="text-blue-200">SMS Monitoring</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white mb-1">Dual-SIM</div>
+                      <div className="text-blue-200">Business & Personal</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white mb-1">Smart</div>
+                      <div className="text-blue-200">Auto-Categorization</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto">
-                  <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                    <Smartphone className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <h3 className="font-semibold text-slate-800 mb-1">Add M-Pesa SMS</h3>
-                    <p className="text-xs sm:text-sm text-slate-600 text-center">Import transaction data from SMS</p>
-                  </div>
-                  
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-lg mx-auto">
                   <div className="text-center p-4 bg-white rounded-lg shadow-sm">
                     <PlusCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <h3 className="font-semibold text-slate-800 mb-1">Manual Entry</h3>
-                    <p className="text-xs sm:text-sm text-slate-600 text-center">Add transactions manually</p>
+                    <p className="text-xs sm:text-sm text-slate-600 text-center">Add transactions manually when needed</p>
                   </div>
                   
                   <div className="text-center p-4 bg-white rounded-lg shadow-sm">
                     <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <h3 className="font-semibold text-slate-800 mb-1">View Reports</h3>
-                    <p className="text-xs sm:text-sm text-slate-600 text-center">View reports and insights</p>
+                    <p className="text-xs sm:text-sm text-slate-600 text-center">Analyze your business expenses</p>
                   </div>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-2">
-                  <Link href="/confirm-sms" className="w-full sm:w-auto">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]">
-                      <Smartphone className="w-4 h-4 mr-2" />
-                      Add M-Pesa SMS
-                    </Button>
-                  </Link>
                   <Link href="/transactions" className="w-full sm:w-auto">
                     <Button variant="outline" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]">
                       <PlusCircle className="w-4 h-4 mr-2" />
@@ -137,9 +140,15 @@ export default function Dashboard() {
                     </Button>
                   </Link>
                   <Link href="/reports" className="w-full sm:w-auto">
-                    <Button variant="ghost" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]">
+                    <Button variant="outline" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]">
                       <BarChart3 className="w-4 h-4 mr-2" />
                       View Reports
+                    </Button>
+                  </Link>
+                  <Link href="/confirm-sms" className="w-full sm:w-auto">
+                    <Button variant="ghost" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]">
+                      <Smartphone className="w-4 h-4 mr-2" />
+                      Manual SMS Entry (Optional)
                     </Button>
                   </Link>
                 </div>

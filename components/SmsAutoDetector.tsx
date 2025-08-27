@@ -68,7 +68,7 @@ export function SmsAutoDetector() {
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${isListening ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
               <span className="text-sm font-medium">
-                {isListening ? 'Monitoring SMS Messages' : 'Detection Stopped'}
+                {isListening ? 'Active - Monitoring SMS Messages' : 'Paused - Not Monitoring'}
               </span>
               {getUnconfirmedCount() > 0 && (
                 <Badge variant="destructive">
@@ -86,12 +86,12 @@ export function SmsAutoDetector() {
                 {isListening ? (
                   <>
                     <Square className="w-4 h-4 mr-2" />
-                    Stop Detection
+                    Pause Monitoring
                   </>
                 ) : (
                   <>
                     <Play className="w-4 h-4 mr-2" />
-                    Start Detection
+                    Resume Monitoring
                   </>
                 )}
               </Button>
@@ -112,11 +112,25 @@ export function SmsAutoDetector() {
               <div className="flex items-center gap-2 text-green-700">
                 <Zap className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  Auto-detection is active. M-Pesa SMS messages will be automatically processed.
+                  Yasinga is now actively monitoring your SMS messages for M-Pesa transactions.
                 </span>
               </div>
               <p className="text-xs text-green-600 mt-1">
-                The system monitors both SIM cards and classifies transactions as business or personal.
+                All M-Pesa transactions will be automatically detected, parsed, and added to your expense tracking.
+              </p>
+            </div>
+          )}
+
+          {!isListening && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-yellow-700">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  SMS monitoring is paused. Your transactions won't be automatically tracked.
+                </span>
+              </div>
+              <p className="text-xs text-yellow-600 mt-1">
+                Click "Resume Monitoring" to continue automatic expense tracking.
               </p>
             </div>
           )}

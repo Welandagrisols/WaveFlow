@@ -15,10 +15,17 @@ export interface AutoDetectedSms {
 }
 
 export const useSmsAutoDetect = () => {
-  const [isListening, setIsListening] = useState(false);
+  const [isListening, setIsListening] = useState(true); // Start automatically
   const [detectedSms, setDetectedSms] = useState<AutoDetectedSms[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<AutoDetectedSms[]>([]);
   const { user } = useAuth();
+
+  // Auto-start detection when component mounts
+  useEffect(() => {
+    if (user) {
+      startAutoDetection();
+    }
+  }, [user]);
 
   // Start automatic SMS detection simulation
   const startAutoDetection = () => {

@@ -43,7 +43,7 @@ export default function SmsAutoDetectPage() {
               <div className="flex items-center gap-2">
                 <Zap className="w-6 h-6 text-blue-600" />
                 <h1 className="text-2xl font-bold text-slate-800">
-                  Automatic SMS Detection
+                  M-Pesa Expense Tracking
                 </h1>
               </div>
             </div>
@@ -63,12 +63,12 @@ export default function SmsAutoDetectPage() {
               <Smartphone className="w-6 h-6 text-blue-600 mt-1" />
               <div>
                 <h3 className="font-semibold text-blue-900 mb-2">
-                  Automatic M-Pesa Transaction Detection
+                  Your Primary Expense Tracking Solution
                 </h3>
                 <p className="text-blue-800 text-sm mb-3">
-                  This feature automatically monitors your SMS messages for M-Pesa transactions 
-                  and creates expense records without manual input. Perfect for busy restaurant 
-                  and hotel owners who process many daily transactions.
+                  Yasinga's core functionality automatically monitors your SMS messages for M-Pesa transactions 
+                  and creates expense records without any manual input. This is the main way you'll track 
+                  business expenses - perfect for busy restaurant and hotel owners processing multiple daily transactions.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>

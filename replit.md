@@ -105,6 +105,15 @@ The architecture prioritizes type safety, developer experience, and scalability 
 
 ## Recent Changes
 
+### Automatic SMS Detection as Primary Feature (August 27, 2025)
+- **REPOSITIONED automatic SMS detection as the core functionality** per user requirements
+- Made automatic detection the primary dashboard feature, not optional
+- Updated dashboard to prominently showcase SMS monitoring as main value proposition
+- Modified user flow to start with automatic detection rather than manual entry
+- Restructured interface to emphasize real-time M-Pesa SMS monitoring for business expense tracking
+- Auto-detection now starts automatically when users access the feature
+- Manual SMS entry and manual transaction entry now positioned as secondary/optional features
+
 ### Critical Service Worker Fix (August 27, 2025)
 - **RESOLVED 2-week 404 error issue** - Service worker was serving stale cached content
 - Completely removed problematic service worker registration from main.tsx
