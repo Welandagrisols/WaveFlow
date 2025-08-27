@@ -1,6 +1,6 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export function useAuth() {
@@ -9,14 +9,14 @@ export function useAuth() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!supabase) {
       setUser(null);
       setLoading(false);
       return;
     }
 
     // Get initial session
-    supabase!.auth.getSession().then(({ data: { session }, error }) => {
+    (supabase as any).auth.getSession().then(({ data: { session }, error }: any) => {
       if (error) {
         console.error('Error getting session:', error);
       }
@@ -25,8 +25,8 @@ export function useAuth() {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase!.auth.onAuthStateChange(
-      (event, session) => {
+    const { data: { subscription } } = (supabase as any).auth.onAuthStateChange(
+      (event: any, session: any) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -42,10 +42,10 @@ export function useAuth() {
   }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
-    if (!isSupabaseConfigured) {
+    if (!supabase) {
       throw new Error('Supabase not configured');
     }
-    const result = await supabase!.auth.signInWithPassword({ email, password });
+    const result = await (supabase as any).auth.signInWithPassword({ email, password });
     if (result.error) {
       throw result.error;
     }
@@ -53,10 +53,10 @@ export function useAuth() {
   };
 
   const signUp = async (email: string, password: string) => {
-    if (!isSupabaseConfigured) {
+    if (!supabase) {
       throw new Error('Supabase not configured');
     }
-    const result = await supabase!.auth.signUp({ 
+    const result = await (supabase as any).auth.signUp({ 
       email, 
       password,
       options: {
@@ -70,10 +70,10 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    if (!isSupabaseConfigured) {
+    if (!supabase) {
       throw new Error('Supabase not configured');
     }
-    const result = await supabase!.auth.signOut();
+    const result = await (supabase as any).auth.signOut();
     if (result.error) {
       throw result.error;
     }
@@ -81,8 +81,8 @@ export function useAuth() {
   };
 
   const getAccessToken = async () => {
-    if (!isSupabaseConfigured) return null;
-    const { data: { session } } = await supabase!.auth.getSession();
+    if (!supabase) return null;
+    const { data: { session } } = await (supabase as any).auth.getSession();
     return session?.access_token || null;
   };
 
@@ -94,6 +94,6 @@ export function useAuth() {
     signOut,
     getAccessToken,
     isAuthenticated: !!user,
-    isSupabaseConfigured,
+    isSupabaseConfigured: !!supabase,
   };
 }

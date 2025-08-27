@@ -24,6 +24,11 @@ interface TransactionDisplay {
   transactionDate: string;
   transactionType: string;
   categoryId?: string;
+  type?: string;
+  isConfirmed?: boolean;
+  timestamp?: string;
+  phone?: string;
+  balance?: number;
 }
 
 interface CategoryData {
@@ -42,9 +47,10 @@ interface SummaryData {
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { user, loading, isSupabaseConfigured } = useAuth();
+  const { user, loading } = useAuth();
   const isAuthenticated = !!user;
   const isLoading = loading;
+  const isSupabaseConfigured = true; // Always use Supabase now
   const [showWelcome, setShowWelcome] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -73,7 +79,7 @@ export default function Dashboard() {
         throw new Error('Supabase not configured');
       }
       
-      const { data, error } = await supabase!
+      const { data, error } = await (supabase as any)
         .from('transactions')
         .select(`
           *,
@@ -102,7 +108,7 @@ export default function Dashboard() {
         throw new Error('Supabase not configured');
       }
 
-      const { data, error } = await supabase!
+      const { data, error } = await (supabase as any)
         .from('transactions')
         .select('amount, direction');
 
@@ -131,7 +137,7 @@ export default function Dashboard() {
         throw new Error('Supabase not configured');
       }
 
-      const { data, error } = await supabase!
+      const { data, error } = await (supabase as any)
         .from('categories')
         .select(`
           *,
@@ -496,7 +502,7 @@ export default function Dashboard() {
                         <div>
                           <p className="font-medium">{transaction.description}</p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{format(new Date(transaction.timestamp), 'MMM dd, yyyy HH:mm')}</span>
+                            <span>{format(new Date(transaction.timestamp || transaction.transactionDate), 'MMM dd, yyyy HH:mm')}</span>
                             {transaction.phone && (
                               <>
                                 <span>•</span>
@@ -519,7 +525,7 @@ export default function Dashboard() {
                           {transaction.type === 'received' ? '+' : '-'}KSh {transaction.amount.toLocaleString()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Balance: KSh {transaction.balance.toLocaleString()}
+                          Balance: KSh {(transaction.balance || 0).toLocaleString()}
                         </p>
                       </div>
                     </div>
