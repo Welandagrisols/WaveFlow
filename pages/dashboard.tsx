@@ -61,6 +61,17 @@ export default function Dashboard() {
     enabled: !!user
   });
 
+  // Get recent transactions by category
+  const { data: categoryData } = useQuery({
+    queryKey: ['/api/transactions/by-category'],
+    queryFn: async () => {
+      const response = await fetch('/api/transactions/by-category?period=month');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    },
+    enabled: !!user
+  });
+
   const handleLogout = async () => {
     await logout();
     router.push('/login');
@@ -354,6 +365,121 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Business vs Personal Expenses */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-slate-800">Expense Breakdown</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-emerald-100 font-medium">Business</p>
+                        <p className="text-xl font-bold text-white">
+                          KES {summary?.businessExpenses?.toLocaleString() || '0'}
+                        </p>
+                        <p className="text-xs text-emerald-200 mt-1">This month</p>
+                      </div>
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Wallet className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-violet-500 to-purple-600 border-0 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-violet-100 font-medium">Personal</p>
+                        <p className="text-xl font-bold text-white">
+                          KES {summary?.personalExpenses?.toLocaleString() || '0'}
+                        </p>
+                        <p className="text-xs text-violet-200 mt-1">This month</p>
+                      </div>
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Top Categories */}
+            {categoryData && categoryData.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-slate-800">Top Spending Categories</h2>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {categoryData.slice(0, 4).map((category: any, index: number) => (
+                        <div key={category.name} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              index === 0 ? 'bg-blue-100' :
+                              index === 1 ? 'bg-green-100' :
+                              index === 2 ? 'bg-orange-100' : 'bg-purple-100'
+                            }`}>
+                              <div className={`w-3 h-3 rounded-full ${
+                                index === 0 ? 'bg-blue-500' :
+                                index === 1 ? 'bg-green-500' :
+                                index === 2 ? 'bg-orange-500' : 'bg-purple-500'
+                              }`}></div>
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900">{category.name}</p>
+                              <p className="text-sm text-slate-500">{category.count} transactions</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-slate-900">
+                              KES {category.total?.toLocaleString() || '0'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="bg-slate-50 border-slate-200">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-slate-800">
+                      {summary?.totalTransactions || 0}
+                    </p>
+                    <p className="text-xs text-slate-600">Total Transactions</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-50 border-slate-200">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-slate-800">
+                      {categoryData?.length || 0}
+                    </p>
+                    <p className="text-xs text-slate-600">Categories Used</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-50 border-slate-200">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-slate-800">
+                      {unconfirmedSms?.length || 0}
+                    </p>
+                    <p className="text-xs text-slate-600">Pending SMS</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
