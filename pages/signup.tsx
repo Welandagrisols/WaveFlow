@@ -71,7 +71,7 @@ export default function SignupPage() {
       }
 
       if (data.needsConfirmation) {
-        setSuccess(data.message);
+        setSuccess(data.message + ' You can also try signing in directly if email confirmation is not working.');
       } else {
         setSuccess('Account created successfully! Redirecting to login...');
         setTimeout(() => {

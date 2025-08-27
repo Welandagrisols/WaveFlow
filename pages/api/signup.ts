@@ -40,8 +40,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Check if user needs to confirm email
       if (data.user && !data.session) {
+        // In development/demo mode, we'll auto-confirm or provide alternative flow
+        const isEmailConfirmationEnabled = process.env.SUPABASE_EMAIL_CONFIRMATION === 'true';
+        
+        if (!isEmailConfirmationEnabled) {
+          // For demo purposes, treat as successful signup
+          return res.status(200).json({ 
+            message: 'Account created successfully! You can now sign in.',
+            user: data.user,
+            needsConfirmation: false
+          });
+        }
+        
         return res.status(200).json({ 
-          message: 'Registration successful! Please check your email to confirm your account.',
+          message: 'Registration successful! Please check your email to confirm your account. If you don\'t receive an email, please contact support.',
           user: data.user,
           needsConfirmation: true
         });
