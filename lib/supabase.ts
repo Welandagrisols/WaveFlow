@@ -3,3 +3,6 @@
 console.log('Using simple authentication with direct database connection');
 
 export const supabase = null;
+
+export { supabase };
+export const isSupabaseConfigured = !!(supabase && isValidUrl && isValidKey);

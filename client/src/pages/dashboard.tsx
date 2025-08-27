@@ -44,6 +44,7 @@ interface SummaryData {
   totalIncome: number;
   totalExpenses: number;
   transactionCount: number;
+  pendingAmount?: number; // Assuming pendingAmount might be part of SummaryData
 }
 
 // Real data from Supabase queries
@@ -62,6 +63,8 @@ export default function Dashboard() {
 
   // Add state for unconfirmed SMS count
   const [unconfirmedSmsCount, setUnconfirmedSmsCount] = useState(0);
+  // State for SMS auto-detection status
+  const [isAutoDetectActive, setIsAutoDetectActive] = useState(true); // Default to active
 
 
   // Redirect to login if not authenticated
@@ -191,6 +194,17 @@ export default function Dashboard() {
     }, 1000);
   };
 
+  // Mock fetching unconfirmed SMS count (replace with actual Supabase query)
+  useEffect(() => {
+    // Simulate fetching unconfirmed SMS count
+    const fetchUnconfirmedSms = async () => {
+      // Replace with your actual Supabase query to count unconfirmed SMS
+      // For now, using a placeholder value
+      setUnconfirmedSmsCount(Math.floor(Math.random() * 5));
+    };
+    fetchUnconfirmedSms();
+  }, []);
+
 
   if (isLoading || summaryLoading) {
     return (
@@ -246,6 +260,45 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Primary SMS Auto-Detection Section */}
+        <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Smartphone className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  Automatic M-Pesa SMS Detection
+                </h3>
+                <p className="text-blue-800 text-sm mb-4">
+                  Your primary expense tracking solution - automatically monitors and processes M-Pesa transactions from SMS messages.
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                    isAutoDetectActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${isAutoDetectActive ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                    {isAutoDetectActive ? 'Active' : 'Inactive'}
+                  </div>
+                  {unconfirmedSmsCount > 0 && (
+                    <Badge variant="destructive" className="animate-pulse">
+                      {unconfirmedSmsCount} Pending
+                    </Badge>
+                  )}
+                  <Button
+                    onClick={() => window.location.href = '/sms-auto-detect'}
+                    className="ml-auto"
+                    size="sm"
+                  >
+                    Open SMS Monitor
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Enhanced Summary Cards */}
         <div className="yasinga-fade-in">

@@ -153,32 +153,74 @@ export const useSmsAutoDetect = () => {
     };
   };
 
-  // Auto-create transaction record
+  // Auto-create transaction record using Supabase
   const createAutoTransaction = async (smsData: AutoDetectedSms) => {
     if (!user) return;
 
     try {
-      const response = await fetch('/api/sms-transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          smsText: smsData.smsText,
-          senderNumber: smsData.senderNumber,
-          simCard: smsData.simCard,
-          accountType: smsData.accountType
-        })
-      });
-
-      if (response.ok) {
-        console.log('✅ Auto-created transaction record');
-        
-        // Mark as processed
-        setDetectedSms(prev => 
-          prev.map(sms => 
-            sms.id === smsData.id ? { ...sms, isProcessed: true } : sms
-          )
-        );
+      // Import Supabase client
+      const { supabase } = await import('../lib/supabase');
+      
+      if (!supabase) {
+        console.error('Supabase not configured');
+        return;
       }
+
+      // Create SMS transaction record
+      const { data: smsRecord, error: smsError } = await supabase
+        .from('sms_transactions')
+        .insert({
+          sms_text: smsData.smsText,
+          sender_number: smsData.senderNumber,
+          sim_card: smsData.simCard,
+          account_type: smsData.accountType,
+          user_id: user.id,
+          amount: smsData.parsedAmount?.toString(),
+          recipient_phone: smsData.recipientName ? 'extracted' : null,
+          recipient_name: smsData.recipientName,
+          transaction_code: smsData.transactionCode,
+          is_confirmed: false,
+          processed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (smsError) {
+        console.error('Failed to save SMS record:', smsError);
+        return;
+      }
+
+      // Auto-create transaction record if parsing was successful
+      if (smsData.parsedAmount && smsData.recipientName) {
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .insert({
+            user_id: user.id,
+            amount: smsData.parsedAmount.toString(),
+            description: `Auto: ${smsData.recipientName}`,
+            transaction_date: new Date().toISOString().split('T')[0],
+            direction: 'OUT', // M-Pesa sent transactions are outgoing expenses
+            category_id: 1, // Default category, will be improved with AI categorization
+            sim_card: smsData.simCard,
+            account_type: smsData.accountType,
+            source: 'sms_auto',
+            sms_transaction_id: smsRecord.id
+          });
+
+        if (transactionError) {
+          console.error('Failed to create auto transaction:', transactionError);
+        } else {
+          console.log('✅ Auto-created transaction record from SMS');
+        }
+      }
+      
+      // Mark as processed
+      setDetectedSms(prev => 
+        prev.map(sms => 
+          sms.id === smsData.id ? { ...sms, isProcessed: true } : sms
+        )
+      );
+      
     } catch (error) {
       console.error('Failed to auto-create transaction:', error);
     }

@@ -1,44 +1,69 @@
+
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { storage } from '../../server/storage';
-import { MpesaSmsParser } from '../../server/smsParser';
+import { supabase } from '../../lib/supabase';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const getUserId = () => {
-    // For now, use a default user ID
-    return 'demo-user-' + Date.now().toString().slice(-6);
-  };
+  if (!supabase) {
+    return res.status(500).json({ error: 'Database not configured' });
+  }
 
-  try {
-    if (req.method === 'GET') {
-      const userId = getUserId();
-      const limit = parseInt(req.query.limit as string) || 20;
-      const offset = parseInt(req.query.offset as string) || 0;
-      const smsTransactions = await storage.getSmsTransactions(userId, limit, offset);
-      res.json(smsTransactions);
-    } else if (req.method === 'POST') {
-      const userId = getUserId();
+  if (req.method === 'POST') {
+    try {
+      const { smsText, senderNumber, simCard, accountType } = req.body;
+
+      // Get user from session (in production, you'd verify the JWT token)
+      const authHeader = req.headers.authorization;
       
-      // Parse the SMS using the MpesaSmsParser
-      const parsedData = MpesaSmsParser.parseSms(req.body.smsText);
-      
-      // Create SMS transaction record
-      const smsTransaction = await storage.createSmsTransaction({
-        ...req.body,
-        userId,
-        parsedAmount: parsedData.amount,
-        recipientName: parsedData.recipientName,
-        transactionCode: parsedData.transactionCode,
-        transactionType: parsedData.transactionType,
-        isConfirmed: false
+      // For now, we'll use a simple approach - in production you'd verify the JWT
+      const { data: smsRecord, error } = await supabase
+        .from('sms_transactions')
+        .insert({
+          sms_text: smsText,
+          sender_number: senderNumber,
+          sim_card: simCard,
+          account_type: accountType || 'business',
+          is_confirmed: false,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      return res.status(200).json({
+        success: true,
+        smsTransaction: smsRecord,
+        message: 'SMS transaction recorded successfully'
       });
 
-      res.json(smsTransaction);
-    } else {
-      res.setHeader('Allow', ['GET', 'POST']);
-      res.status(405).json({ message: 'Method not allowed' });
+    } catch (error) {
+      console.error('API error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  } catch (error) {
-    console.error("Error in SMS transactions API:", error);
-    res.status(500).json({ message: "Internal server error" });
   }
+
+  if (req.method === 'GET') {
+    try {
+      const { data: smsTransactions, error } = await supabase
+        .from('sms_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+
+      return res.status(200).json(smsTransactions || []);
+    } catch (error) {
+      console.error('API error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  res.status(405).end(`Method ${req.method} Not Allowed`);
 }
