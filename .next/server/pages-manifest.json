@@ -3,8 +3,10 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/mobile": "pages/mobile.js",
   "/dashboard": "pages/dashboard.js",
-  "/api/transactions/summary": "pages/api/transactions/summary.js",
-  "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js"
+  "/transactions": "pages/transactions.js",
+  "/api/transactions": "pages/api/transactions.js",
+  "/send-money": "pages/send-money.js",
+  "/api/categories": "pages/api/categories.js",
+  "/api/login": "pages/api/login.js"
 }
