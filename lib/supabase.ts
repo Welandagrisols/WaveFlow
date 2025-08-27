@@ -11,6 +11,7 @@ console.log('- Supabase Key configured:', !!supabaseKey && supabaseKey !== 'NEXT
 // Validate URL format - check if we have real values, not placeholder text
 const hasValidUrl = supabaseUrl &&
                    supabaseUrl !== 'NEXT_PUBLIC_SUPABASE_URL' &&
+                   supabaseUrl !== 'NEXT_PUBLIC_SUPABASE_URL/' &&
                    supabaseUrl.startsWith('https://') &&
                    supabaseUrl.includes('.supabase.co');
 
@@ -19,21 +20,11 @@ const hasValidKey = supabaseKey &&
                    supabaseKey.length > 10;
 
 // Environment validation
-if (!supabaseUrl || !supabaseKey) {
-  console.log('Environment check:');
-  console.log('- Supabase URL configured:', !!supabaseUrl);
-  console.log('- Supabase Key configured:', !!supabaseKey);
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.log('Supabase configuration incomplete:');
-    console.log('- Valid URL:', !!supabaseUrl);
-    console.log('- Valid Key:', !!supabaseKey);
-    console.log('Running in demo mode without Supabase');
-
-    // Use dummy values for demo mode
-    supabaseUrl = 'https://demo.supabase.co';
-    supabaseKey = 'demo-key';
-  }
+if (!hasValidUrl || !hasValidKey) {
+  console.log('Supabase configuration incomplete:');
+  console.log('- Valid URL:', hasValidUrl);
+  console.log('- Valid Key:', hasValidKey);
+  console.log('Running in demo mode without Supabase');
 }
 
-export const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+export const supabase = hasValidUrl && hasValidKey ? createClient(supabaseUrl, supabaseKey) : null;
