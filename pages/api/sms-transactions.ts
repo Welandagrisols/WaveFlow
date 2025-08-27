@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sender_number: senderNumber,
           sim_card: simCard,
           account_type: accountType || 'business',
-          is_confirmed: false,
+          is_processed: false,
           created_at: new Date().toISOString()
         })
         .select()

@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { data: unconfirmedSms, error } = await supabase
         .from('sms_transactions')
         .select('*')
-        .eq('is_confirmed', false)
+        .eq('is_processed', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { data, error } = await supabase
         .from('sms_transactions')
-        .update({ is_confirmed: isConfirmed })
+        .update({ is_processed: isConfirmed })
         .eq('id', id)
         .select()
         .single();
