@@ -10,12 +10,7 @@ export function useAuth() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      // Demo mode - simulate logged in user
-      setUser({ 
-        id: 'demo-user', 
-        email: 'demo@yasinga.com',
-        user_metadata: { name: 'Demo User' }
-      });
+      setUser(null);
       setLoading(false);
       return;
     }
@@ -48,7 +43,7 @@ export function useAuth() {
 
   const signIn = async (email: string, password: string) => {
     if (!isSupabaseConfigured) {
-      throw new Error('Supabase not configured - running in demo mode');
+      throw new Error('Supabase not configured');
     }
     const result = await supabase!.auth.signInWithPassword({ email, password });
     if (result.error) {
@@ -59,7 +54,7 @@ export function useAuth() {
 
   const signUp = async (email: string, password: string) => {
     if (!isSupabaseConfigured) {
-      throw new Error('Supabase not configured - running in demo mode');
+      throw new Error('Supabase not configured');
     }
     const result = await supabase!.auth.signUp({ 
       email, 
@@ -76,9 +71,7 @@ export function useAuth() {
 
   const signOut = async () => {
     if (!isSupabaseConfigured) {
-      // Demo mode - just reload
-      window.location.reload();
-      return;
+      throw new Error('Supabase not configured');
     }
     const result = await supabase!.auth.signOut();
     if (result.error) {
@@ -88,7 +81,7 @@ export function useAuth() {
   };
 
   const getAccessToken = async () => {
-    if (!isSupabaseConfigured) return 'demo-token';
+    if (!isSupabaseConfigured) return null;
     const { data: { session } } = await supabase!.auth.getSession();
     return session?.access_token || null;
   };

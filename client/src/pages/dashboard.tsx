@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import TransactionItem from "@/components/financial/transaction-item";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { supabaseApi } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,17 +38,13 @@ interface SummaryData {
   transactionCount: number;
 }
 
-// Mock data for demonstration purposes (replace with actual data fetching logic)
-const currentBalance = 15000;
-const totalReceived = 25000;
-const totalSent = 10000;
-const receivedCount = 120;
-const sentCount = 80;
-const unconfirmedSmsCount = 5;
+// Real data from Supabase queries
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading, isSupabaseConfigured } = useAuth();
+  const { user, loading, isSupabaseConfigured } = useAuth();
+  const isAuthenticated = !!user;
+  const isLoading = loading;
   const [showWelcome, setShowWelcome] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -72,20 +68,85 @@ export default function Dashboard() {
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
     queryKey: ["supabase-transactions"],
-    queryFn: () => supabaseApi.getTransactions(),
-    enabled: isAuthenticated,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) {
+        throw new Error('Supabase not configured');
+      }
+      
+      const { data, error } = await supabase!
+        .from('transactions')
+        .select(`
+          *,
+          categories(name, color)
+        `)
+        .order('transaction_date', { ascending: false });
+
+      if (error) throw error;
+      return data?.map((t: any) => ({
+        id: t.id,
+        amount: t.amount,
+        direction: t.direction,
+        description: t.description,
+        transactionDate: t.transaction_date,
+        transactionType: t.transaction_type,
+        categoryId: t.category_id
+      })) || [];
+    },
+    enabled: isAuthenticated && isSupabaseConfigured,
   });
 
   const { data: summary, isLoading: summaryLoading } = useQuery<SummaryData>({
     queryKey: ["supabase-summary"],
-    queryFn: () => supabaseApi.getTransactionSummary(),
-    enabled: isAuthenticated,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) {
+        throw new Error('Supabase not configured');
+      }
+
+      const { data, error } = await supabase!
+        .from('transactions')
+        .select('amount, direction');
+
+      if (error) throw error;
+
+      const summary = data?.reduce((acc: any, transaction: any) => {
+        const amount = parseFloat(transaction.amount);
+        if (transaction.direction === 'IN') {
+          acc.totalIncome += amount;
+        } else {
+          acc.totalExpenses += amount;
+        }
+        acc.transactionCount++;
+        return acc;
+      }, { totalIncome: 0, totalExpenses: 0, transactionCount: 0 });
+
+      return summary || { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
+    },
+    enabled: isAuthenticated && isSupabaseConfigured,
   });
 
   const { data: categoryData = [], isLoading: categoryLoading } = useQuery<CategoryData[]>({
     queryKey: ["supabase-categories"],
-    queryFn: () => supabaseApi.getCategories(),
-    enabled: isAuthenticated,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) {
+        throw new Error('Supabase not configured');
+      }
+
+      const { data, error } = await supabase!
+        .from('categories')
+        .select(`
+          *,
+          transactions(amount)
+        `);
+
+      if (error) throw error;
+
+      return data?.map((category: any) => ({
+        categoryName: category.name,
+        amount: category.transactions?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0,
+        count: category.transactions?.length || 0
+      })) || [];
+    },
+    enabled: isAuthenticated && isSupabaseConfigured,
   });
 
   // Check if user is new (no transactions)
@@ -263,7 +324,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  KSh {currentBalance.toLocaleString()}
+                  KSh {summary ? (summary.totalIncome - summary.totalExpenses).toLocaleString() : '0'}
                 </div>
               </CardContent>
             </Card>
@@ -275,10 +336,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  KSh {totalReceived.toLocaleString()}
+                  KSh {summary?.totalIncome.toLocaleString() || '0'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {receivedCount} transactions
+                  Total received
                 </p>
               </CardContent>
             </Card>
@@ -290,10 +351,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  KSh {totalSent.toLocaleString()}
+                  KSh {summary?.totalExpenses.toLocaleString() || '0'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {sentCount} transactions
+                  Total expenses
                 </p>
               </CardContent>
             </Card>
@@ -305,7 +366,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-600">
-                  {unconfirmedSmsCount}
+                  {summary?.transactionCount || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Pending confirmation
