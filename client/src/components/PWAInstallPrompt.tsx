@@ -11,11 +11,18 @@ export function PWAInstallPrompt() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Show install prompt after user has used the app for a bit
+    // Check if user has dismissed before
+    const hasBeenDismissed = localStorage.getItem('pwa-install-dismissed');
+    if (hasBeenDismissed) {
+      setDismissed(true);
+      return;
+    }
+
+    // Show install prompt after user interaction
     if (isInstallable && !isInstalled && !dismissed) {
       const timer = setTimeout(() => {
         setShowPrompt(true);
-      }, 30000); // Show after 30 seconds
+      }, 15000); // Show after 15 seconds
 
       return () => clearTimeout(timer);
     }
@@ -29,8 +36,9 @@ export function PWAInstallPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     setDismissed(true);
-    // Remember dismissal for this session
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    // Remember dismissal for 7 days
+    const dismissUntil = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    localStorage.setItem('pwa-install-dismissed', dismissUntil.toString());
   };
 
   // Don't show if already installed or dismissed

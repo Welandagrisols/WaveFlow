@@ -27,6 +27,22 @@ export function usePWA() {
 
     checkInstalled();
 
+    // Monitor network status changes
+    const handleOnline = () => {
+      setIsOffline(false);
+      // Trigger background sync when back online
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then(registration => {
+          return registration.sync.register('background-sync');
+        });
+      }
+    };
+
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();

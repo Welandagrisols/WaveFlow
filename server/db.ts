@@ -13,14 +13,14 @@ if (!connectionString) {
 } else {
   try {
     // Create postgres client with connection pooling and better SSL handling
-    const client = postgres(connectionString, { 
+    const client = postgres(connectionString, {
       ssl: connectionString.includes('localhost') ? false : 'require',
       max: 5,
       idle_timeout: 20,
       connect_timeout: 30,
       onnotice: () => {}, // Suppress notices
     });
-    
+
     db = drizzle(client, { schema });
     console.log("Database client initialized successfully");
   } catch (error) {

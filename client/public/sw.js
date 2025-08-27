@@ -1,8 +1,6 @@
-const CACHE_NAME = 'yasinga-v1.0.0';
+const CACHE_NAME = 'yasinga-v1.1.0';
 const STATIC_CACHE_URLS = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
@@ -10,6 +8,9 @@ const STATIC_CACHE_URLS = [
   '/favicon-16x16.png',
   '/apple-touch-icon.png'
 ];
+
+const API_CACHE_NAME = 'yasinga-api-v1.0.0';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -43,52 +44,85 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - intelligent caching strategy
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
   // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (request.method !== 'GET') {
     return;
   }
 
   // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  if (!request.url.startsWith(self.location.origin)) {
     return;
   }
 
+  // API requests - cache with TTL
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleApiRequest(request));
+    return;
+  }
+
+  // Static assets - cache first
   event.respondWith(
-    caches.match(event.request)
+    caches.match(request)
       .then((response) => {
-        // Return cached version or fetch from network
         if (response) {
           return response;
         }
 
-        return fetch(event.request).then((response) => {
-          // Don't cache non-successful responses
+        return fetch(request).then((response) => {
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response
           const responseToCache = response.clone();
-
-          // Cache successful responses
           caches.open(CACHE_NAME)
             .then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put(request, responseToCache);
             });
 
           return response;
         });
       })
       .catch(() => {
-        // Offline fallback for HTML pages
-        if (event.request.destination === 'document') {
+        if (request.destination === 'document') {
           return caches.match('/');
         }
       })
   );
 });
+
+async function handleApiRequest(request) {
+  const cache = await caches.open(API_CACHE_NAME);
+  const cachedResponse = await cache.match(request);
+  
+  // Check if cached response is still fresh
+  if (cachedResponse) {
+    const cachedTime = cachedResponse.headers.get('sw-cached-at');
+    if (cachedTime && (Date.now() - parseInt(cachedTime)) < CACHE_DURATION) {
+      return cachedResponse;
+    }
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const responseToCache = response.clone();
+      responseToCache.headers.set('sw-cached-at', Date.now().toString());
+      cache.put(request, responseToCache);
+    }
+    return response;
+  } catch (error) {
+    // Return cached version if network fails
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw error;
+  }
+}
 
 // Background sync for when connection is restored
 self.addEventListener('sync', (event) => {
