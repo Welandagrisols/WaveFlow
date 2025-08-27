@@ -56,13 +56,27 @@ export default {
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
         },
-        // Yasinga brand colors - Wave/PayPal inspired
+        // Enhanced Yasinga brand colors
         'yasinga': {
-          'primary': '#0066CC',
-          'secondary': '#00A3CC',
-          'success': '#00C851',
-          'warning': '#FF8800',
-          'error': '#FF4444',
+          'primary': 'hsl(214, 84%, 56%)',
+          'primary-dark': 'hsl(214, 84%, 46%)',
+          'secondary': 'hsl(197, 71%, 52%)',
+          'secondary-dark': 'hsl(197, 71%, 42%)',
+          'success': 'hsl(142, 71%, 45%)',
+          'warning': 'hsl(38, 92%, 50%)',
+          'error': 'hsl(0, 72%, 51%)',
+          'slate': {
+            50: 'hsl(210, 40%, 98%)',
+            100: 'hsl(210, 40%, 96%)',
+            200: 'hsl(214, 32%, 91%)',
+            300: 'hsl(213, 27%, 84%)',
+            400: 'hsl(215, 20%, 65%)',
+            500: 'hsl(215, 25%, 52%)',
+            600: 'hsl(215, 28%, 42%)',
+            700: 'hsl(215, 32%, 32%)',
+            800: 'hsl(220, 26%, 14%)',
+            900: 'hsl(220, 39%, 11%)',
+          }
         },
         // Wave Accounting inspired colors
         'wave': {
@@ -100,9 +114,21 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
-        serif: ["var(--font-serif)"],
-        mono: ["var(--font-mono)"],
+        sans: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        serif: ["Charter", "BitStream Charter", "Sitka Text", "Cambria", "serif"],
+        mono: ["JetBrains Mono", "Fira Code", "Consolas", "Monaco", "monospace"],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1' }],
+        '6xl': ['3.75rem', { lineHeight: '1' }],
       },
       keyframes: {
         "accordion-down": {
