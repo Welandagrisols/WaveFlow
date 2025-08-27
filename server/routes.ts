@@ -1,20 +1,29 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTransactionSchema, insertCategorySchema, insertPaymentReminderSchema, insertSmsTransactionSchema, insertSupplierSchema, insertItemSchema } from "@shared/schema";
+import { insertTransactionSchema, insertCategorySchema, insertPaymentReminderSchema, insertSmsTransactionSchema, insertSupplierSchema, insertItemSchema } from "../shared/schema";
 import { MpesaSmsParser } from "./smsParser";
 import { wsManager } from "./websocket";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Simple middleware to extract user ID (for demo purposes)
+  const getUserId = (req: any) => {
+    // For now, use a default user ID
+    return 'demo-user-' + Date.now().toString().slice(-6);
+  };
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes (simplified)
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
+      const userId = getUserId(req);
+      // Return a demo user for now
+      const user = {
+        id: userId,
+        email: 'demo@yasinga.com',
+        firstName: 'Demo',
+        lastName: 'User',
+        businessName: 'My Business'
+      };
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -23,9 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Categories routes
-  app.get("/api/categories", isAuthenticated, async (req: any, res) => {
+  app.get("/api/categories", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       let categories = await storage.getCategories(userId);
 
       // If no categories exist, create default ones
@@ -69,9 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/categories", isAuthenticated, async (req: any, res) => {
+  app.post("/api/categories", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const categoryData = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory({ ...categoryData, userId });
 
@@ -86,9 +95,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transactions routes
-  app.get("/api/transactions", isAuthenticated, async (req: any, res) => {
+  app.get("/api/transactions", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const transactions = await storage.getTransactions(userId, limit, offset);
@@ -99,9 +108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions", isAuthenticated, async (req: any, res) => {
+  app.post("/api/transactions", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const transactionData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction({ ...transactionData, userId });
 
@@ -115,9 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/transactions/summary", isAuthenticated, async (req: any, res) => {
+  app.get("/api/transactions/summary", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       const summary = await storage.getTransactionsSummary(userId, startDate, endDate);
@@ -128,9 +137,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/transactions/by-category", isAuthenticated, async (req: any, res) => {
+  app.get("/api/transactions/by-category", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       const categories = await storage.getTransactionsByCategory(userId, startDate, endDate);
@@ -142,9 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment reminders routes
-  app.get("/api/payment-reminders", isAuthenticated, async (req: any, res) => {
+  app.get("/api/payment-reminders", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const reminders = await storage.getPaymentReminders(userId);
       res.json(reminders);
     } catch (error) {
@@ -153,9 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payment-reminders", isAuthenticated, async (req: any, res) => {
+  app.post("/api/payment-reminders", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const reminderData = insertPaymentReminderSchema.parse(req.body);
       const reminder = await storage.createPaymentReminder({ ...reminderData, userId });
       res.json(reminder);
@@ -165,9 +174,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/payment-reminders/:id/status", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/payment-reminders/:id/status", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { id } = req.params;
       const { status } = req.body;
       const reminder = await storage.updatePaymentReminderStatus(id, userId, status);
@@ -182,9 +191,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SMS Transaction routes
-  app.post("/api/sms-transactions", isAuthenticated, async (req: any, res) => {
+  app.post("/api/sms-transactions", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { smsText, senderNumber, simCard } = req.body;
 
       // Parse the SMS
@@ -235,9 +244,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/sms-transactions/unconfirmed", isAuthenticated, async (req: any, res) => {
+  app.get("/api/sms-transactions/unconfirmed", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const unconfirmedTransactions = await storage.getUnconfirmedSmsTransactions(userId);
       res.json(unconfirmedTransactions);
     } catch (error) {
@@ -246,9 +255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/sms-transactions/:id/confirm", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/sms-transactions/:id/confirm", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { id } = req.params;
       const { itemName, supplierName, categoryId, isPersonal, isLoan, loanRecipient, expectedRepaymentDate } = req.body;
 
@@ -330,9 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Suppliers routes
-  app.get("/api/suppliers", isAuthenticated, async (req: any, res) => {
+  app.get("/api/suppliers", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const suppliers = await storage.getSuppliers(userId);
       res.json(suppliers);
     } catch (error) {
@@ -342,9 +351,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Items routes
-  app.get("/api/items", isAuthenticated, async (req: any, res) => {
+  app.get("/api/items", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { categoryId } = req.query;
       const items = await storage.getItems(userId, categoryId as string);
       res.json(items);
@@ -355,9 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics endpoint for supplier spending
-  app.get("/api/analytics/suppliers", isAuthenticated, async (req: any, res) => {
+  app.get("/api/analytics/suppliers", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
 
       const transactions = await storage.getTransactions(userId, 1000, 0);
@@ -395,9 +404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics endpoint for item spending
-  app.get("/api/analytics/items", isAuthenticated, async (req: any, res) => {
+  app.get("/api/analytics/items", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate, categoryId } = req.query;
 
       const transactions = await storage.getTransactions(userId, 1000, 0);
@@ -437,9 +446,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Loan tracking routes
-  app.get("/api/loans/outstanding", isAuthenticated, async (req: any, res) => {
+  app.get("/api/loans/outstanding", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const outstandingLoans = await storage.getOutstandingLoans(userId);
       res.json(outstandingLoans);
     } catch (error) {
@@ -448,9 +457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/loans/:transactionId/repaid", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/loans/:transactionId/repaid", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { transactionId } = req.params;
       await storage.markLoanAsRepaid(transactionId, userId);
       res.json({ message: "Loan marked as repaid successfully" });
@@ -461,9 +470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Personal expenses summary route
-  app.get("/api/personal-expenses/summary", isAuthenticated, async (req: any, res) => {
+  app.get("/api/personal-expenses/summary", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
       const summary = await storage.getPersonalExpensesSummary(
         userId,
@@ -478,9 +487,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initialize personal categories for new users
-  app.post("/api/categories/init-personal", isAuthenticated, async (req: any, res) => {
+  app.post("/api/categories/init-personal", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       await storage.initializePersonalCategories(userId);
       res.json({ message: "Personal categories initialized successfully" });
     } catch (error) {
@@ -490,9 +499,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data export routes
-  app.get("/api/export/json", isAuthenticated, async (req: any, res) => {
+  app.get("/api/export/json", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
 
       const [transactions, categories, suppliers, paymentReminders] = await Promise.all([
@@ -534,9 +543,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/export/csv", isAuthenticated, async (req: any, res) => {
+  app.get("/api/export/csv", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
       const Papa = (await import('papaparse')).default;
 
@@ -578,9 +587,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/export/pdf", isAuthenticated, async (req: any, res) => {
+  app.get("/api/export/pdf", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { startDate, endDate } = req.query;
       const jsPDF = (await import('jspdf')).default;
       const autoTable = (await import('jspdf-autotable')).default;
@@ -657,9 +666,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Backup functionality
-  app.post("/api/backup/email", isAuthenticated, async (req: any, res) => {
+  app.post("/api/backup/email", async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { email } = req.body;
 
       if (!email) {

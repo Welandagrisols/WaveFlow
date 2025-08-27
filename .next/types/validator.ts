@@ -22,19 +22,6 @@ type PagesPageConfig = {
   }
 }
 
-type ApiRouteConfig = {
-  default: (req: any, res: any) => Promise<Response | void> | Response | void
-  config?: {
-    api?: {
-      bodyParser?: boolean | { sizeLimit?: string }
-      responseLimit?: string | number | boolean
-      externalResolver?: boolean
-    }
-    runtime?: 'edge' | 'experimental-edge' | 'nodejs' | string // necessary unless config is exported as const
-    maxDuration?: number
-  }
-}
-
 
 
 
@@ -118,64 +105,6 @@ type ApiRouteConfig = {
   handler satisfies PagesPageConfig
 }
 
-// Validate ../../pages/api/auth/user.ts
-{
-  const handler = {} as typeof import("../../pages/api/auth/user.js")
-  handler satisfies ApiRouteConfig
-}
 
-// Validate ../../pages/api/categories/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/categories/index.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/login/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/login/index.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/payment-reminders/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/payment-reminders/index.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/reports/by-category.ts
-{
-  const handler = {} as typeof import("../../pages/api/reports/by-category.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/reports/summary.ts
-{
-  const handler = {} as typeof import("../../pages/api/reports/summary.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/sms-transactions/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/sms-transactions/index.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/sms-transactions/unconfirmed.ts
-{
-  const handler = {} as typeof import("../../pages/api/sms-transactions/unconfirmed.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/suppliers/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/suppliers/index.js")
-  handler satisfies ApiRouteConfig
-}
-
-// Validate ../../pages/api/transactions/index.ts
-{
-  const handler = {} as typeof import("../../pages/api/transactions/index.js")
-  handler satisfies ApiRouteConfig
-}
 
 
