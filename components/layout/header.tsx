@@ -69,7 +69,7 @@ export default function Header({ onMenuClick, title }: HeaderProps) {
           
           {/* User Avatar */}
           <Avatar className="w-8 h-8 cursor-pointer hover:ring-2 hover:ring-yasinga-primary hover:ring-offset-2 transition-all" data-testid="avatar-user">
-            <AvatarImage src={user?.profileImageUrl} alt={user?.firstName} />
+            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name} />
             <AvatarFallback className="bg-slate-300 text-slate-600">
               <User className="w-4 h-4" />
             </AvatarFallback>
