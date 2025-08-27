@@ -5,7 +5,7 @@ type AppRoutes = never
 type PageRoutes = "/" | "/_app" | "/_document" | "/confirm-sms" | "/dashboard" | "/login" | "/personal-tracking" | "/reports" | "/send-money" | "/sim-management" | "/sms-auto-detect" | "/sms-confirmation" | "/track-payments" | "/transactions"
 type LayoutRoutes = never
 type RedirectRoutes = never
-type RewriteRoutes = never
+type RewriteRoutes = "/_next/[[...path]]"
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes
 
 
@@ -13,6 +13,7 @@ interface ParamMap {
   "/": {}
   "/_app": {}
   "/_document": {}
+  "/_next/[[...path]]": { "path"?: string[]; }
   "/confirm-sms": {}
   "/dashboard": {}
   "/login": {}

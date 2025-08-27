@@ -1,35 +1,35 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables - some features may not work');
-}
-
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    })
-  : null;
-
-// Check if Supabase is properly configured
-export const isSupabaseConfigured = !!supabase;
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 console.log('Environment check:');
 console.log('- Supabase URL configured:', !!supabaseUrl);
 console.log('- Supabase Key configured:', !!supabaseAnonKey);
 
-if (supabase) {
-  console.log('Supabase client initialized successfully');
+// Validate configuration
+const isValidUrl = supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
+const isValidKey = supabaseAnonKey.length > 100; // Supabase keys are typically much longer
+
+console.log('Supabase configuration validation:');
+console.log('- Valid URL:', isValidUrl);
+console.log('- Valid Key:', isValidKey);
+
+let supabase = null;
+
+if (isValidUrl && isValidKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('✅ Supabase client initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize Supabase client:', error);
+    supabase = null;
+  }
 } else {
-  console.log('Supabase configuration incomplete:');
-  console.log('- Valid URL:', !!supabaseUrl && supabaseUrl.startsWith('https://'));
-  console.log('- Valid Key:', !!supabaseAnonKey && supabaseAnonKey.length > 20);
-  console.log('Running in demo mode without Supabase');
+  console.log('⚠️ Supabase configuration incomplete - running in demo mode');
 }
+
+export { supabase };
+export const isSupabaseConfigured = !!(supabase && isValidUrl && isValidKey);
