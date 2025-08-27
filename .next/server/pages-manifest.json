@@ -5,5 +5,5 @@
   "/dashboard": "pages/dashboard.js",
   "/login": "pages/login.js",
   "/reports": "pages/reports.js",
-  "/api/transactions/by-category": "pages/api/transactions/by-category.js"
+  "/": "pages/index.js"
 }
