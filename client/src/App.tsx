@@ -22,15 +22,14 @@ function Router() {
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
+      <Route path="/" component={isAuthenticated && !isLoading ? () => (
+        <MainLayout>
+          <Dashboard />
+        </MainLayout>
+      ) : Landing} />
+      
+      {isAuthenticated && !isLoading ? (
         <>
-          <Route path="/" component={() => (
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          )} />
           <Route path="/transactions" component={() => (
             <MainLayout>
               <Transactions />
@@ -67,7 +66,8 @@ function Router() {
             </MainLayout>
           )} />
         </>
-      )}
+      ) : null}
+      
       <Route component={NotFound} />
     </Switch>
   );
