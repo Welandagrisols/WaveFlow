@@ -28,15 +28,20 @@
       "static/chunks/main.js",
       "static/chunks/pages/dashboard.js"
     ],
-    "/send-money": [
+    "/personal-tracking": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/send-money.js"
+      "static/chunks/pages/personal-tracking.js"
     ],
-    "/transactions": [
+    "/sms-confirmation": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/transactions.js"
+      "static/chunks/pages/sms-confirmation.js"
+    ],
+    "/track-payments": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/track-payments.js"
     ]
   },
   "ampFirstPages": []
