@@ -1,19 +1,45 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '../../lib/supabase';
-
-type SupabaseClient = typeof supabase;
+import { NextApiRequest, NextApiResponse } from 'next';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const client = supabase as SupabaseClient;
-  if (!client) {
-    return res.status(500).json({ error: 'Database not configured' });
+  console.log('Supabase configuration check:');
+  console.log('- URL configured:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log('- Key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return res.status(500).json({ error: 'Supabase configuration missing' });
   }
 
-  if (req.method === 'POST') {
-    try {
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseKey) {
+    return res.status(500).json({ error: 'Supabase key configuration missing' });
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseKey
+  );
+
+  try {
+    console.log('✅ Supabase client initialized successfully');
+
+    if (req.method === 'GET') {
+      // Redirect to Supabase Auth URL or return auth status
+      return res.status(200).json({ 
+        message: "Please use client-side authentication", 
+        authUrl: "/auth/login" 
+      });
+    }
+
+    if (req.method === 'POST') {
       const { email, password } = req.body;
-      
-      const { data, error } = await client.auth.signInWithPassword({
+
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -23,12 +49,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       return res.status(200).json({ user: data.user, session: data.session });
-    } catch (error) {
-      console.error('Login error:', error);
-      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
 
-  res.setHeader('Allow', ['POST']);
-  res.status(405).end(`Method ${req.method} Not Allowed`);
+    // Method not allowed
+    res.setHeader('Allow', ['GET', 'POST']);
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
+
+  } catch (error) {
+    console.error('API error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
