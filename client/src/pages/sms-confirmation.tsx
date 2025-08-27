@@ -466,26 +466,48 @@ export default function SmsConfirmation() {
         </div>
       )}
       
-      {/* Test SMS Input for Demo */}
-      <Card className="border-dashed">
+      {/* Quick SMS Input */}
+      <Card className="border-dashed bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
         <CardHeader>
-          <CardTitle className="text-lg">Test SMS Processing</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-blue-600" />
+            Quick SMS Processing
+          </CardTitle>
           <CardDescription>
-            Paste an M-Pesa SMS here to test the automatic detection
+            Paste your M-Pesa SMS here for instant processing. The app will automatically detect transaction details.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TestSmsForm onSubmit={() => queryClient.invalidateQueries({ queryKey: ["/api/sms-transactions/unconfirmed"] })} />
+          <QuickSmsForm onSubmit={() => queryClient.invalidateQueries({ queryKey: ["/api/sms-transactions/unconfirmed"] })} />
+        </CardContent>
+      </Card>
+
+      {/* SMS Templates for Quick Access */}
+      <Card className="border-dashed bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="h-5 w-5 text-green-600" />
+            Quick Actions
+          </CardTitle>
+          <CardDescription>
+            Common M-Pesa transaction templates for testing
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SmsTemplates onTemplateSelect={(template) => {
+            queryClient.invalidateQueries({ queryKey: ["/api/sms-transactions/unconfirmed"] });
+          }} />
         </CardContent>
       </Card>
     </div>
   );
 }
 
-// Test SMS form component
-function TestSmsForm({ onSubmit }: { onSubmit: () => void }) {
+// Enhanced SMS form component with auto-detection
+function QuickSmsForm({ onSubmit }: { onSubmit: () => void }) {
   const [smsText, setSmsText] = useState('');
   const [simCard, setSimCard] = useState('SIM1');
+  const [autoProcess, setAutoProcess] = useState(true);
   const { toast } = useToast();
 
   const processSms = useMutation({
@@ -498,65 +520,164 @@ function TestSmsForm({ onSubmit }: { onSubmit: () => void }) {
     },
     onSuccess: () => {
       toast({
-        title: "SMS processed",
-        description: "The SMS has been parsed and added for confirmation.",
+        title: "SMS processed instantly",
+        description: "Transaction detected and parsed automatically.",
       });
       setSmsText('');
       onSubmit();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to process SMS. Please check the format.",
+        title: "Processing failed",
+        description: "Check SMS format and try again.",
         variant: "destructive",
       });
-      console.error("SMS processing error:", error);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Auto-process when SMS is pasted (if auto-process enabled)
+  const handleTextChange = (value: string) => {
+    setSmsText(value);
+    
+    if (autoProcess && value.trim().length > 50 && value.toLowerCase().includes('ksh')) {
+      // Auto-detect SIM card from SMS content
+      const detectedSim = value.toLowerCase().includes('business') || 
+                         value.toLowerCase().includes('paybill') ? 'SIM1' : 'SIM2';
+      setSimCard(detectedSim);
+      
+      // Auto-process after short delay
+      setTimeout(() => {
+        if (value.trim()) {
+          processSms.mutate({ smsText: value.trim(), simCard: detectedSim });
+        }
+      }, 1000);
+    }
+  };
+
+  const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!smsText.trim()) return;
-    
     processSms.mutate({ smsText: smsText.trim(), simCard });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="test-sms">M-Pesa SMS Text</Label>
-        <Textarea
-          id="test-sms"
-          placeholder="QE52HJ61MN Confirmed. Ksh2,500.00 sent to JOHN SUPPLIER 0712345678 on 12/3/24 at 2:15 PM. M-PESA balance is Ksh45,200.00..."
-          value={smsText}
-          onChange={(e) => setSmsText(e.target.value)}
-          rows={3}
-          data-testid="textarea-test-sms"
-        />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="auto-process"
+            checked={autoProcess}
+            onCheckedChange={setAutoProcess}
+          />
+          <Label htmlFor="auto-process" className="text-sm font-medium">
+            Auto-process when pasted
+          </Label>
+        </div>
+        <Badge variant={autoProcess ? "default" : "secondary"}>
+          {autoProcess ? "Auto Mode" : "Manual Mode"}
+        </Badge>
       </div>
-      
-      <div className="flex items-center gap-4">
+
+      <form onSubmit={handleManualSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="test-sim">SIM Card</Label>
-          <Select value={simCard} onValueChange={setSimCard}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="SIM1">SIM 1</SelectItem>
-              <SelectItem value="SIM2">SIM 2</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="quick-sms">Paste M-Pesa SMS Here</Label>
+          <Textarea
+            id="quick-sms"
+            placeholder="Paste your M-Pesa SMS message here. In auto mode, it will be processed automatically..."
+            value={smsText}
+            onChange={(e) => handleTextChange(e.target.value)}
+            rows={4}
+            className="font-mono text-sm"
+            data-testid="textarea-quick-sms"
+          />
+          <p className="text-xs text-gray-500">
+            {autoProcess ? "SMS will be processed automatically when pasted" : "Click 'Process SMS' to manually process"}
+          </p>
         </div>
         
-        <Button 
-          type="submit" 
-          disabled={!smsText.trim() || processSms.isPending}
-          data-testid="button-process-sms"
+        <div className="flex items-center gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="quick-sim">SIM Card</Label>
+            <Select value={simCard} onValueChange={setSimCard}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SIM1">SIM 1 (Business)</SelectItem>
+                <SelectItem value="SIM2">SIM 2 (Personal)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {!autoProcess && (
+            <Button 
+              type="submit" 
+              disabled={!smsText.trim() || processSms.isPending}
+              data-testid="button-quick-process"
+            >
+              {processSms.isPending ? "Processing..." : "Process SMS"}
+            </Button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// SMS templates for quick testing
+function SmsTemplates({ onTemplateSelect }: { onTemplateSelect: (template: string) => void }) {
+  const templates = [
+    {
+      name: "Food Supplier Payment",
+      sms: "QE52HJ61MN Confirmed. Ksh2,500.00 sent to FRESH VEGETABLES SUPPLIER 0712345678 on 12/3/24 at 2:15 PM. M-PESA balance is Ksh45,200.00.",
+      category: "Business"
+    },
+    {
+      name: "Utility Bill Payment", 
+      sms: "QF62KL71NP Confirmed. Ksh8,500.00 sent to KENYA POWER 0711223344 on 12/3/24 at 3:30 PM. M-PESA balance is Ksh36,700.00.",
+      category: "Business"
+    },
+    {
+      name: "Personal Transfer",
+      sms: "QG72MN82OQ Confirmed. Ksh1,200.00 sent to JANE DOE 0733445566 on 12/3/24 at 4:45 PM. M-PESA balance is Ksh35,500.00.",
+      category: "Personal"
+    }
+  ];
+
+  const processSms = useMutation({
+    mutationFn: async (data: { smsText: string; simCard: string }) => {
+      return await apiRequest('POST', '/api/sms-transactions', {
+        smsText: data.smsText,
+        senderNumber: 'M-PESA',
+        simCard: data.simCard,
+      });
+    },
+    onSuccess: () => {
+      onTemplateSelect("processed");
+    },
+  });
+
+  const handleTemplateClick = (template: typeof templates[0]) => {
+    const simCard = template.category === "Business" ? "SIM1" : "SIM2";
+    processSms.mutate({ smsText: template.sms, simCard });
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {templates.map((template, index) => (
+        <Button
+          key={index}
+          variant="outline"
+          className="h-auto p-3 flex flex-col items-start text-left"
+          onClick={() => handleTemplateClick(template)}
+          disabled={processSms.isPending}
         >
-          {processSms.isPending ? "Processing..." : "Process SMS"}
+          <div className="font-medium text-sm">{template.name}</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {template.category} • Ksh{template.sms.match(/Ksh([\d,\.]+)/)?.[1]}
+          </div>
         </Button>
-      </div>
-    </form>
+      ))}
+    </div>
   );
 }

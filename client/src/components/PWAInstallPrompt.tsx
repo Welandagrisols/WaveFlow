@@ -61,25 +61,25 @@ export function PWAInstallPrompt() {
             Get the best experience with our native-like app
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-3">
             <div className="flex items-center gap-3 p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
               <Zap className="h-5 w-5 text-green-600" />
               <div className="text-sm">
-                <div className="font-medium">Faster Performance</div>
-                <div className="text-gray-600 dark:text-gray-400">Native app speed</div>
+                <div className="font-medium">Faster SMS Processing</div>
+                <div className="text-gray-600 dark:text-gray-400">Quick copy-paste workflow</div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-              <Wifi className="h-5 w-5 text-blue-600" />
+              <Smartphone className="h-5 w-5 text-blue-600" />
               <div className="text-sm">
-                <div className="font-medium">Works Offline</div>
-                <div className="text-gray-600 dark:text-gray-400">Use without internet</div>
+                <div className="font-medium">Easy SMS Sharing</div>
+                <div className="text-gray-600 dark:text-gray-400">Share SMS directly to app</div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
               <Shield className="h-5 w-5 text-purple-600" />
               <div className="text-sm">
@@ -115,7 +115,7 @@ export function PWAInstallPrompt() {
               Maybe Later
             </Button>
           </div>
-          
+
           <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
             The app will be added to your home screen and work like any other app
           </p>
