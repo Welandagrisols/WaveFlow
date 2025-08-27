@@ -42,9 +42,8 @@ const nextConfig = {
       },
     ];
   },
-  // Configure allowed dev origins for Replit
   experimental: {
-    allowedDevOrigins: ['*.replit.dev', '*.replit.co'],
+    serverExternalPackages: ['sharp']
   }
 }
 
