@@ -76,6 +76,12 @@ type ApiRouteConfig = {
   handler satisfies PagesPageConfig
 }
 
+// Validate ../../pages/mobile.tsx
+{
+  const handler = {} as typeof import("../../pages/mobile.js")
+  handler satisfies PagesPageConfig
+}
+
 // Validate ../../pages/personal-tracking.tsx
 {
   const handler = {} as typeof import("../../pages/personal-tracking.js")
