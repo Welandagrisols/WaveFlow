@@ -173,7 +173,7 @@ export default function Dashboard() {
     ]
   };
 
-  // Render action cards for each section
+  // Render action cards for each section with blue gradient styling
   const renderActionCards = (actions: any[]) => (
     <div className="grid grid-cols-1 gap-4">
       {actions.map((action) => {
@@ -181,21 +181,19 @@ export default function Dashboard() {
         return (
           <Card 
             key={action.title}
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] ${
-              action.highlight ? 'ring-2 ring-green-500 bg-green-50' : ''
-            } ${action.urgent ? 'ring-2 ring-orange-500 bg-orange-50' : ''}`}
+            className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] bg-gradient-to-r from-blue-500 to-cyan-500 border-0 text-white"
             onClick={() => router.push(action.href)}
           >
             <CardContent className="p-4">
               <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                   <IconComponent className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900">{action.title}</h3>
-                  <p className="text-sm text-slate-600">{action.description}</p>
+                  <h3 className="font-semibold text-white">{action.title}</h3>
+                  <p className="text-sm text-blue-100">{action.description}</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-slate-400" />
+                <ArrowRight className="w-5 h-5 text-blue-100" />
               </div>
             </CardContent>
           </Card>
@@ -308,10 +306,54 @@ export default function Dashboard() {
               </Card>
             )}
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Side by Side */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-slate-800">Quick Actions</h2>
-              {renderActionCards(quickActions.home)}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Send Money Card */}
+                <Card 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] bg-gradient-to-r from-blue-500 to-cyan-500 border-0 text-white"
+                  onClick={() => router.push('/send-money')}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Send className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white">Send Money</h3>
+                        <p className="text-sm text-blue-100">Quick M-Pesa payment</p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-blue-100" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* SMS Processing Card */}
+                <Card 
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${
+                    (unconfirmedSms?.length || 0) > 0 
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 border-0 text-white' 
+                      : 'bg-gradient-to-r from-gray-500 to-slate-500 border-0 text-white'
+                  }`}
+                  onClick={() => router.push('/sms-confirmation')}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                        <MessageSquare className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white">SMS Processing</h3>
+                        <p className="text-sm text-orange-100">
+                          {unconfirmedSms?.length || 0} pending
+                        </p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-orange-100" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
