@@ -10,6 +10,16 @@ import { Link } from "wouter";
 import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3 } from "lucide-react";
 import type { Transaction } from "@shared/schema";
 
+interface TransactionDisplay {
+  id: string;
+  amount: string;
+  direction: "IN" | "OUT";
+  description: string;
+  transactionDate: string;
+  transactionType: string;
+  categoryId?: string;
+}
+
 interface CategoryData {
   categoryName: string;
   amount: number;
@@ -42,7 +52,7 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: transactions = [], isLoading: transactionsLoading } = useQuery<Transaction[]>({
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
     queryKey: ["/api/transactions"],
     enabled: isAuthenticated,
   });
@@ -88,63 +98,63 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-4 lg:p-8 yasinga-fade-in">
+    <div className="p-2 sm:p-4 lg:p-8 yasinga-fade-in">
       {/* Welcome Experience for New Users */}
       {showWelcome && (
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Card className="yasinga-card bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
-            <CardContent className="p-8">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
               <div className="text-center">
-                <div className="flex items-center justify-center space-x-2 mb-4">
-                  <Star className="w-8 h-8 text-yellow-500" />
-                  <h2 className="text-2xl font-bold text-slate-800">Welcome to Yasinga!</h2>
-                  <Star className="w-8 h-8 text-yellow-500" />
+                <div className="flex items-center justify-center space-x-1 sm:space-x-2 mb-4">
+                  <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800 text-center">Welcome to Yasinga!</h2>
+                  <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
                 </div>
-                <p className="text-lg text-slate-600 mb-6">
+                <p className="text-sm sm:text-lg text-slate-600 mb-4 sm:mb-6 text-center px-2">
                   Your smart M-Pesa expense tracker is ready to help you manage your business finances.
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
-                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
-                      <Smartphone className="w-6 h-6 text-blue-600" />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                  <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-blue-100">
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg mx-auto mb-2 sm:mb-3">
+                      <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">1. Connect Your M-Pesa</h3>
-                    <p className="text-sm text-slate-600">Start by adding your first M-Pesa transaction or SMS confirmation</p>
+                    <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">1. Connect M-Pesa</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 text-center">Add M-Pesa transactions or SMS confirmations</p>
                   </div>
                   
-                  <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
-                    <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
-                      <PlusCircle className="w-6 h-6 text-green-600" />
+                  <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-green-100">
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg mx-auto mb-2 sm:mb-3">
+                      <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                     </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">2. Categorize Expenses</h3>
-                    <p className="text-sm text-slate-600">Organize transactions into business categories like food, supplies, etc.</p>
+                    <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">2. Categorize</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 text-center">Organize into business categories</p>
                   </div>
                   
-                  <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100">
-                    <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
-                      <BarChart3 className="w-6 h-6 text-purple-600" />
+                  <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-purple-100">
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg mx-auto mb-2 sm:mb-3">
+                      <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                     </div>
-                    <h3 className="font-semibold text-slate-800 mb-2">3. Track & Analyze</h3>
-                    <p className="text-sm text-slate-600">View reports and insights to optimize your business spending</p>
+                    <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">3. Track & Analyze</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 text-center">View reports and insights</p>
                   </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link href="/confirm-sms">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3" data-testid="button-add-sms">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-2">
+                  <Link href="/confirm-sms" className="w-full sm:w-auto">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-add-sms">
                       <Smartphone className="w-4 h-4 mr-2" />
                       Add M-Pesa SMS
                     </Button>
                   </Link>
-                  <Link href="/transactions">
-                    <Button variant="outline" className="px-6 py-3" data-testid="button-add-transaction">
+                  <Link href="/transactions" className="w-full sm:w-auto">
+                    <Button variant="outline" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-add-transaction">
                       <PlusCircle className="w-4 h-4 mr-2" />
                       Add Transaction
                     </Button>
                   </Link>
-                  <Link href="/reports">
-                    <Button variant="ghost" className="px-6 py-3" data-testid="button-view-reports">
+                  <Link href="/reports" className="w-full sm:w-auto">
+                    <Button variant="ghost" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-view-reports">
                       <BarChart3 className="w-4 h-4 mr-2" />
                       View Reports
                     </Button>
@@ -157,11 +167,11 @@ export default function Dashboard() {
       )}
 
       {/* Summary Cards */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <SummaryCards summary={summary} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Recent Transactions */}
         <div className="lg:col-span-2">
           <Card className="yasinga-card">
@@ -196,7 +206,7 @@ export default function Dashboard() {
                 </div>
               ) : recentTransactions.length > 0 ? (
                 <div className="space-y-4">
-                  {recentTransactions.map((transaction: Transaction) => (
+                  {recentTransactions.map((transaction: TransactionDisplay) => (
                     <TransactionItem key={transaction.id} transaction={transaction} />
                   ))}
                 </div>
