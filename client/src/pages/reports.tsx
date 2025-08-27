@@ -121,9 +121,11 @@ export default function Reports() {
   const totalIncome = summary?.totalIncome || 0;
   const netIncome = totalIncome - totalExpenses;
 
-  // Calculate business vs personal split (mock calculation)
-  const businessExpenses = totalExpenses * 0.66;
-  const personalExpenses = totalExpenses * 0.34;
+  // Use real business vs personal split from backend
+  const businessExpenses = summary?.businessExpenses || 0;
+  const personalExpenses = summary?.personalExpenses || 0;
+  const businessPercentage = totalExpenses > 0 ? (businessExpenses / totalExpenses) * 100 : 66;
+  const personalPercentage = totalExpenses > 0 ? (personalExpenses / totalExpenses) * 100 : 34;
 
   // Find top category
   const topCategory = categoryData.reduce((max, category) => 
@@ -255,9 +257,9 @@ export default function Reports() {
                 <span className="font-semibold">KES {personalExpenses.toLocaleString()}</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
-                <div className="bg-yasinga-primary h-2 rounded-full" style={{ width: '66%' }} />
+                <div className="bg-yasinga-primary h-2 rounded-full" style={{ width: `${businessPercentage}%` }} />
               </div>
-              <p className="text-xs text-slate-500">66% Business, 34% Personal</p>
+              <p className="text-xs text-slate-500">{businessPercentage.toFixed(0)}% Business, {personalPercentage.toFixed(0)}% Personal</p>
             </div>
           </CardContent>
         </Card>

@@ -169,45 +169,83 @@ export class DatabaseStorage implements IStorage {
 
   async getTransactionsSummary(userId: string, startDate?: Date, endDate?: Date) {
     const conditions = [eq(transactions.userId, userId)];
+    const smsConditions = [eq(smsTransactions.userId, userId)];
     
     if (startDate) {
       conditions.push(gte(transactions.transactionDate, startDate));
+      smsConditions.push(gte(smsTransactions.createdAt, startDate));
     }
     if (endDate) {
       conditions.push(lte(transactions.transactionDate, endDate));
+      smsConditions.push(lte(smsTransactions.createdAt, endDate));
     }
 
+    // Get confirmed transactions
     const result = await db
       .select({
         direction: transactions.direction,
         total: sql<number>`sum(${transactions.amount})`,
         count: sql<number>`count(*)`,
+        businessTotal: sql<number>`sum(case when ${transactions.isPersonal} = false then ${transactions.amount} else 0 end)`,
+        personalTotal: sql<number>`sum(case when ${transactions.isPersonal} = true then ${transactions.amount} else 0 end)`,
       })
       .from(transactions)
       .where(and(...conditions))
       .groupBy(transactions.direction);
 
+    // Get unconfirmed SMS transactions 
+    const smsResult = await db
+      .select({
+        total: sql<number>`sum(${smsTransactions.amount})`,
+        count: sql<number>`count(*)`,
+        businessTotal: sql<number>`sum(case when ${smsTransactions.accountType} = 'business' then ${smsTransactions.amount} else 0 end)`,
+        personalTotal: sql<number>`sum(case when ${smsTransactions.accountType} = 'personal' then ${smsTransactions.amount} else 0 end)`,
+        sim1Total: sql<number>`sum(case when ${smsTransactions.simCard} = 'SIM1' then ${smsTransactions.amount} else 0 end)`,
+        sim2Total: sql<number>`sum(case when ${smsTransactions.simCard} = 'SIM2' then ${smsTransactions.amount} else 0 end)`,
+      })
+      .from(smsTransactions)
+      .where(and(...smsConditions, eq(smsTransactions.isConfirmed, false)));
+
     const income = result.find(r => r.direction === 'IN')?.total || 0;
     const expenses = result.find(r => r.direction === 'OUT')?.total || 0;
     const totalCount = result.reduce((sum, r) => sum + r.count, 0);
+    const businessExpenses = result.find(r => r.direction === 'OUT')?.businessTotal || 0;
+    const personalExpenses = result.find(r => r.direction === 'OUT')?.personalTotal || 0;
+
+    const smsExpenses = smsResult[0]?.total || 0;
+    const smsCount = smsResult[0]?.count || 0;
+    const smsBusinessExpenses = smsResult[0]?.businessTotal || 0;
+    const smsPersonalExpenses = smsResult[0]?.personalTotal || 0;
+    const sim1Expenses = smsResult[0]?.sim1Total || 0;
+    const sim2Expenses = smsResult[0]?.sim2Total || 0;
 
     return {
       totalIncome: Number(income),
-      totalExpenses: Number(expenses),
-      transactionCount: totalCount,
+      totalExpenses: Number(expenses + smsExpenses),
+      transactionCount: totalCount + smsCount,
+      confirmedTransactions: totalCount,
+      unconfirmedTransactions: smsCount,
+      businessExpenses: Number(businessExpenses + smsBusinessExpenses),
+      personalExpenses: Number(personalExpenses + smsPersonalExpenses),
+      sim1Expenses: Number(sim1Expenses),
+      sim2Expenses: Number(sim2Expenses),
     };
   }
 
   async getTransactionsByCategory(userId: string, startDate?: Date, endDate?: Date) {
     const conditions = [eq(transactions.userId, userId)];
+    const smsConditions = [eq(smsTransactions.userId, userId)];
     
     if (startDate) {
       conditions.push(gte(transactions.transactionDate, startDate));
+      smsConditions.push(gte(smsTransactions.createdAt, startDate));
     }
     if (endDate) {
       conditions.push(lte(transactions.transactionDate, endDate));
+      smsConditions.push(lte(smsTransactions.createdAt, endDate));
     }
 
+    // Get confirmed transactions by category
     const result = await db
       .select({
         categoryName: sql<string>`coalesce(${categories.name}, 'Uncategorized')`,
@@ -219,11 +257,56 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions))
       .groupBy(categories.name);
 
-    return result.map(r => ({
-      categoryName: r.categoryName,
-      amount: Number(r.amount),
-      count: r.count,
-    }));
+    // Get unconfirmed SMS transactions and auto-categorize them
+    const smsTransactionData = await db
+      .select()
+      .from(smsTransactions)
+      .where(and(...smsConditions, eq(smsTransactions.isConfirmed, false)));
+
+    // Process SMS transactions to get their suggested categories
+    const { MpesaSmsParser } = await import('./smsParser');
+    const smsCategoryTotals = new Map<string, { amount: number; count: number }>();
+    
+    for (const smsTransaction of smsTransactionData) {
+      const parsedTransaction = MpesaSmsParser.parseSms(smsTransaction.smsText);
+      const categoryName = parsedTransaction.suggestedCategory || 'Uncategorized';
+      const amount = Number(smsTransaction.amount);
+      
+      const existing = smsCategoryTotals.get(categoryName) || { amount: 0, count: 0 };
+      smsCategoryTotals.set(categoryName, {
+        amount: existing.amount + amount,
+        count: existing.count + 1
+      });
+    }
+
+    // Combine confirmed and SMS transaction results
+    const categoryTotals = new Map<string, { amount: number; count: number }>();
+    
+    // Add confirmed transactions
+    for (const resultItem of result) {
+      categoryTotals.set(resultItem.categoryName, {
+        amount: Number(resultItem.amount),
+        count: resultItem.count
+      });
+    }
+    
+    // Add SMS transaction totals
+    smsCategoryTotals.forEach((data, categoryName) => {
+      const existing = categoryTotals.get(categoryName) || { amount: 0, count: 0 };
+      categoryTotals.set(categoryName, {
+        amount: existing.amount + data.amount,
+        count: existing.count + data.count
+      });
+    });
+
+    // Convert to array and sort by amount
+    return Array.from(categoryTotals.entries())
+      .map(([categoryName, data]) => ({
+        categoryName,
+        amount: data.amount,
+        count: data.count,
+      }))
+      .sort((a, b) => b.amount - a.amount);
   }
 
   async getPaymentReminders(userId: string): Promise<PaymentReminder[]> {
