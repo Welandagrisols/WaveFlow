@@ -8,7 +8,7 @@ const connectionString = process.env.DATABASE_URL;
 let db = null;
 
 if (!connectionString) {
-  console.warn("No database URL found. App will run in demo mode.");
+  console.warn("No database URL found. Database connection required.");
   db = null;
 } else {
   try {
@@ -25,7 +25,7 @@ if (!connectionString) {
     console.log("Database client initialized successfully");
   } catch (error) {
     console.error("Database connection failed:", error);
-    console.warn("Running in demo mode without database");
+    console.warn("Database connection required");
     db = null;
   }
 }

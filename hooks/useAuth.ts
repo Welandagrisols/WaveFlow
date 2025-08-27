@@ -21,28 +21,11 @@ export const useAuth = () => {
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         } else {
-          // Auto-create a default user for demo purposes
-          const defaultUser: User = {
-            id: 'demo-user-' + Date.now(),
-            email: 'demo@yasinga.com',
-            firstName: 'Demo',
-            lastName: 'User',
-            businessName: 'My Business'
-          };
-          setUser(defaultUser);
-          localStorage.setItem('yasinga_user', JSON.stringify(defaultUser));
+          setUser(null);
         }
       } catch (error) {
         console.error('Error checking session:', error);
-        // Fallback to creating a new user
-        const fallbackUser: User = {
-          id: 'demo-user-fallback',
-          email: 'demo@yasinga.com',
-          firstName: 'Demo',
-          lastName: 'User',
-          businessName: 'My Business'
-        };
-        setUser(fallbackUser);
+        setUser(null);
       }
       setLoading(false);
     };

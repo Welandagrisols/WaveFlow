@@ -28,7 +28,7 @@ if (isValidUrl && isValidKey) {
     supabase = null;
   }
 } else {
-  console.log('⚠️ Supabase configuration incomplete - running in demo mode');
+  console.log('⚠️ Supabase configuration incomplete');
 }
 
 export { supabase };
