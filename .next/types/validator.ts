@@ -94,6 +94,12 @@ type ApiRouteConfig = {
   handler satisfies PagesPageConfig
 }
 
+// Validate ../../pages/signup.tsx
+{
+  const handler = {} as typeof import("../../pages/signup.js")
+  handler satisfies PagesPageConfig
+}
+
 // Validate ../../pages/sim-management.tsx
 {
   const handler = {} as typeof import("../../pages/sim-management.js")
@@ -124,6 +130,12 @@ type ApiRouteConfig = {
   handler satisfies PagesPageConfig
 }
 
+// Validate ../../pages/api/auth/user.ts
+{
+  const handler = {} as typeof import("../../pages/api/auth/user.js")
+  handler satisfies ApiRouteConfig
+}
+
 // Validate ../../pages/api/categories.ts
 {
   const handler = {} as typeof import("../../pages/api/categories.js")
@@ -133,6 +145,12 @@ type ApiRouteConfig = {
 // Validate ../../pages/api/login.ts
 {
   const handler = {} as typeof import("../../pages/api/login.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/signup.ts
+{
+  const handler = {} as typeof import("../../pages/api/signup.js")
   handler satisfies ApiRouteConfig
 }
 
