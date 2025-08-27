@@ -9,18 +9,33 @@ export function useAuth() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    // Force loading to false if supabase is not available
     if (!supabase) {
+      console.log('Supabase not configured, setting loading to false');
       setUser(null);
       setLoading(false);
       return;
     }
 
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('Auth timeout - setting loading to false');
+      setLoading(false);
+    }, 3000);
+
     // Get initial session
     (supabase as any).auth.getSession().then(({ data: { session }, error }: any) => {
+      clearTimeout(timeout);
       if (error) {
         console.error('Error getting session:', error);
       }
+      console.log('Session loaded:', !!session?.user);
       setUser(session?.user ?? null);
+      setLoading(false);
+    }).catch((error: any) => {
+      clearTimeout(timeout);
+      console.error('Failed to get session:', error);
+      setUser(null);
       setLoading(false);
     });
 
@@ -38,7 +53,10 @@ export function useAuth() {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
