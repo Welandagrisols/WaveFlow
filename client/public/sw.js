@@ -1,7 +1,7 @@
 // Service Worker for Yasinga PWA
-const CACHE_NAME = 'yasinga-v1.0.0';
-const STATIC_CACHE = 'yasinga-static-v1.0.0';
-const DYNAMIC_CACHE = 'yasinga-dynamic-v1.0.0';
+const CACHE_NAME = 'yasinga-v2.0.0-fixed';
+const STATIC_CACHE = 'yasinga-static-v2.0.0-fixed';
+const DYNAMIC_CACHE = 'yasinga-dynamic-v2.0.0-fixed';
 
 // Files to cache on install
 const STATIC_FILES = [
@@ -83,23 +83,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (HTML pages)
+  // Handle navigation requests (HTML pages) - ALWAYS fetch fresh for now
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match('/index.html')
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE)
+              .then((cache) => cache.put(request, responseClone));
           }
-          return fetch(request)
-            .then((response) => {
-              if (response.ok) {
-                const responseClone = response.clone();
-                caches.open(DYNAMIC_CACHE)
-                  .then((cache) => cache.put(request, responseClone));
-              }
-              return response;
-            });
+          return response;
         })
         .catch(() => caches.match('/index.html'))
     );
