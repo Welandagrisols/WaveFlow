@@ -148,9 +148,21 @@ type ApiRouteConfig = {
   handler satisfies ApiRouteConfig
 }
 
+// Validate ../../pages/api/loans/outstanding.ts
+{
+  const handler = {} as typeof import("../../pages/api/loans/outstanding.js")
+  handler satisfies ApiRouteConfig
+}
+
 // Validate ../../pages/api/login.ts
 {
   const handler = {} as typeof import("../../pages/api/login.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/personal-expenses/summary/[...dates].ts
+{
+  const handler = {} as typeof import("../../pages/api/personal-expenses/summary/[...dates].js")
   handler satisfies ApiRouteConfig
 }
 
