@@ -19,7 +19,10 @@ async function getAuthHeaders() {
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const headers = await getAuthHeaders();
   
-  return fetch(endpoint, {
+  // Ensure endpoint starts with /api for Next.js API routes
+  const apiEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+  
+  return fetch(apiEndpoint, {
     ...options,
     headers: {
       ...headers,
