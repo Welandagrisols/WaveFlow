@@ -20,7 +20,7 @@ import {
   type InsertSupplier,
   type Item,
   type InsertItem,
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, gte, lte } from "drizzle-orm";
 
@@ -55,6 +55,7 @@ export interface IStorage {
   
   // SMS Transaction operations
   createSmsTransaction(smsTransaction: InsertSmsTransaction & { userId: string }): Promise<SmsTransaction>;
+  getSmsTransactions(userId: string, limit?: number, offset?: number): Promise<SmsTransaction[]>;
   getUnconfirmedSmsTransactions(userId: string): Promise<SmsTransaction[]>;
   confirmSmsTransaction(id: string, userId: string, itemName?: string, supplierName?: string, categoryId?: string): Promise<SmsTransaction | undefined>;
   
@@ -102,6 +103,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategories(userId: string): Promise<Category[]> {
+    if (!db) {
+      return [];
+    }
     return await db
       .select()
       .from(categories)
@@ -110,6 +114,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCategory(category: InsertCategory & { userId: string }): Promise<Category> {
+    if (!db) {
+      // Return a mock category for demo mode
+      return {
+        id: 'demo-' + Date.now(),
+        userId: category.userId,
+        name: category.name,
+        isBusiness: category.isBusiness || true,
+        color: category.color || '#0066CC',
+        icon: category.icon || 'fas fa-tag',
+        createdAt: new Date()
+      } as Category;
+    }
     const [newCategory] = await db
       .insert(categories)
       .values(category)
@@ -341,6 +357,16 @@ export class DatabaseStorage implements IStorage {
       .values(smsTransaction)
       .returning();
     return newSmsTransaction;
+  }
+
+  async getSmsTransactions(userId: string, limit: number = 20, offset: number = 0): Promise<SmsTransaction[]> {
+    return await db
+      .select()
+      .from(smsTransactions)
+      .where(eq(smsTransactions.userId, userId))
+      .orderBy(desc(smsTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
   }
 
   async getUnconfirmedSmsTransactions(userId: string): Promise<SmsTransaction[]> {

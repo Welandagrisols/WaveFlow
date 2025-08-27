@@ -22,6 +22,19 @@ type PagesPageConfig = {
   }
 }
 
+type ApiRouteConfig = {
+  default: (req: any, res: any) => Promise<Response | void> | Response | void
+  config?: {
+    api?: {
+      bodyParser?: boolean | { sizeLimit?: string }
+      responseLimit?: string | number | boolean
+      externalResolver?: boolean
+    }
+    runtime?: 'edge' | 'experimental-edge' | 'nodejs' | string // necessary unless config is exported as const
+    maxDuration?: number
+  }
+}
+
 
 
 
@@ -111,6 +124,34 @@ type PagesPageConfig = {
   handler satisfies PagesPageConfig
 }
 
+// Validate ../../pages/api/categories.ts
+{
+  const handler = {} as typeof import("../../pages/api/categories.js")
+  handler satisfies ApiRouteConfig
+}
 
+// Validate ../../pages/api/sms-transactions.ts
+{
+  const handler = {} as typeof import("../../pages/api/sms-transactions.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/sms-transactions/unconfirmed.ts
+{
+  const handler = {} as typeof import("../../pages/api/sms-transactions/unconfirmed.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/suppliers.ts
+{
+  const handler = {} as typeof import("../../pages/api/suppliers.js")
+  handler satisfies ApiRouteConfig
+}
+
+// Validate ../../pages/api/transactions.ts
+{
+  const handler = {} as typeof import("../../pages/api/transactions.js")
+  handler satisfies ApiRouteConfig
+}
 
 

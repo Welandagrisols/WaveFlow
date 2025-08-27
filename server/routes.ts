@@ -124,6 +124,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SMS Transactions routes
+  app.get("/api/sms-transactions", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const smsTransactions = await storage.getSmsTransactions(userId, limit, offset);
+      res.json(smsTransactions);
+    } catch (error) {
+      console.error("Error fetching SMS transactions:", error);
+      res.status(500).json({ message: "Failed to fetch SMS transactions" });
+    }
+  });
+
+  app.get("/api/sms-transactions/unconfirmed", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const unconfirmedSms = await storage.getUnconfirmedSmsTransactions(userId);
+      res.json(unconfirmedSms);
+    } catch (error) {
+      console.error("Error fetching unconfirmed SMS transactions:", error);
+      res.status(500).json({ message: "Failed to fetch unconfirmed SMS transactions" });
+    }
+  });
+
+  app.post("/api/sms-transactions", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const smsData = insertSmsTransactionSchema.parse(req.body);
+      
+      // Parse the SMS using the MpesaSmsParser
+      const parsedData = MpesaSmsParser.parseSms(smsData.smsText);
+      
+      // Create SMS transaction record
+      const smsTransaction = await storage.createSmsTransaction({
+        ...smsData,
+        userId,
+        parsedAmount: parsedData.amount,
+        recipientName: parsedData.recipientName,
+        transactionCode: parsedData.transactionCode,
+        transactionType: parsedData.transactionType,
+        isConfirmed: false
+      });
+
+      // Broadcast real-time update (skip for now as method doesn't exist)
+      // wsManager.broadcastSmsTransactionUpdate(userId, smsTransaction);
+
+      res.json(smsTransaction);
+    } catch (error) {
+      console.error("Error creating SMS transaction:", error);
+      res.status(500).json({ message: "Failed to create SMS transaction" });
+    }
+  });
+
+  // Suppliers routes
+  app.get("/api/suppliers", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      let suppliers = await storage.getSuppliers(userId);
+      
+      // If no suppliers exist, create default ones for hotel/restaurant business
+      if (suppliers.length === 0) {
+        const defaultSuppliers = [
+          { name: "Local Food Market", phone: "0712345678", category: "Food & Beverages" },
+          { name: "Kitchen Equipment Ltd", phone: "0723456789", category: "Kitchen Supplies" },
+          { name: "Cleaning Services Co", phone: "0734567890", category: "Housekeeping" },
+          { name: "Maintenance Solutions", phone: "0745678901", category: "Maintenance & Repairs" },
+          { name: "Staff Catering", phone: "0756789012", category: "Staff Meals" },
+          { name: "Linen Supply Co", phone: "0767890123", category: "Linens & Towels" }
+        ];
+
+        for (const supplierData of defaultSuppliers) {
+          await storage.createSupplier({ ...supplierData, userId });
+        }
+
+        // Fetch the newly created suppliers
+        suppliers = await storage.getSuppliers(userId);
+      }
+
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      res.status(500).json({ message: "Failed to fetch suppliers" });
+    }
+  });
+
+  app.post("/api/suppliers", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const supplierData = insertSupplierSchema.parse(req.body);
+      const supplier = await storage.createSupplier({ ...supplierData, userId });
+
+      // Broadcast real-time update (skip for now as method doesn't exist)
+      // wsManager.broadcastSupplierUpdate(userId, supplier);
+
+      res.json(supplier);
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+      res.status(500).json({ message: "Failed to create supplier" });
+    }
+  });
+
   app.get("/api/transactions/summary", async (req: any, res) => {
     try {
       const userId = getUserId(req);

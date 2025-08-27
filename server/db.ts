@@ -1,9 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from "@shared/schema";
+import * as schema from "../shared/schema";
 
-// Use Supabase connection
-const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+// Use database connection with proper SSL handling
+const connectionString = process.env.DATABASE_URL;
 
 let db = null;
 
@@ -12,16 +12,17 @@ if (!connectionString) {
   db = null;
 } else {
   try {
-    // Create postgres client with connection pooling
+    // Create postgres client with connection pooling and better SSL handling
     const client = postgres(connectionString, { 
-      ssl: 'require',
-      max: 10,
+      ssl: connectionString.includes('localhost') ? false : 'require',
+      max: 5,
       idle_timeout: 20,
-      connect_timeout: 10,
+      connect_timeout: 30,
+      onnotice: () => {}, // Suppress notices
     });
     
     db = drizzle(client, { schema });
-    console.log("Database connected successfully");
+    console.log("Database client initialized successfully");
   } catch (error) {
     console.error("Database connection failed:", error);
     console.warn("Running in demo mode without database");
