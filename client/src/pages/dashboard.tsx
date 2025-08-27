@@ -85,84 +85,28 @@ export default function Dashboard() {
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
     queryKey: ["supabase-transactions"],
     queryFn: async () => {
-      if (!isSupabaseConfigured) {
-        throw new Error('Supabase not configured');
-      }
-
-      const { data, error } = await (supabase as any)
-        .from('transactions')
-        .select(`
-          *,
-          categories(name, color)
-        `)
-        .order('transaction_date', { ascending: false });
-
-      if (error) throw error;
-      return data?.map((t: any) => ({
-        id: t.id,
-        amount: t.amount,
-        direction: t.direction,
-        description: t.description,
-        transactionDate: t.transaction_date,
-        transactionType: t.transaction_type,
-        categoryId: t.category_id
-      })) || [];
+      // Return empty array since Supabase is not configured
+      return [];
     },
-    enabled: isAuthenticated && isSupabaseConfigured,
+    enabled: isAuthenticated,
   });
 
   const { data: summary, isLoading: summaryLoading } = useQuery<SummaryData>({
     queryKey: ["supabase-summary"],
     queryFn: async () => {
-      if (!isSupabaseConfigured) {
-        throw new Error('Supabase not configured');
-      }
-
-      const { data, error } = await (supabase as any)
-        .from('transactions')
-        .select('amount, direction');
-
-      if (error) throw error;
-
-      const summary = data?.reduce((acc: any, transaction: any) => {
-        const amount = parseFloat(transaction.amount);
-        if (transaction.direction === 'IN') {
-          acc.totalIncome += amount;
-        } else {
-          acc.totalExpenses += amount;
-        }
-        acc.transactionCount++;
-        return acc;
-      }, { totalIncome: 0, totalExpenses: 0, transactionCount: 0 });
-
-      return summary || { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
+      // Return default summary since Supabase is not configured
+      return { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
     },
-    enabled: isAuthenticated && isSupabaseConfigured,
+    enabled: isAuthenticated,
   });
 
   const { data: categoryData = [], isLoading: categoryLoading } = useQuery<CategoryData[]>({
     queryKey: ["supabase-categories"],
     queryFn: async () => {
-      if (!isSupabaseConfigured) {
-        throw new Error('Supabase not configured');
-      }
-
-      const { data, error } = await (supabase as any)
-        .from('categories')
-        .select(`
-          *,
-          transactions(amount)
-        `);
-
-      if (error) throw error;
-
-      return data?.map((category: any) => ({
-        categoryName: category.name,
-        amount: category.transactions?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0,
-        count: category.transactions?.length || 0
-      })) || [];
+      // Return empty array since Supabase is not configured
+      return [];
     },
-    enabled: isAuthenticated && isSupabaseConfigured,
+    enabled: isAuthenticated,
   });
 
   // Check if user is new (no transactions)
@@ -303,10 +247,10 @@ export default function Dashboard() {
         {/* Enhanced Summary Cards */}
         <div className="yasinga-fade-in">
           <SummaryCards
-            totalExpenses={summary.totalExpenses}
-            totalIncome={summary.totalIncome}
-            totalTransactions={summary.totalTransactions}
-            pendingAmount={summary.pendingAmount}
+            totalExpenses={summary?.totalExpenses || 0}
+            totalIncome={summary?.totalIncome || 0}
+            totalTransactions={summary?.transactionCount || 0}
+            pendingAmount={0}
           />
         </div>
 
