@@ -1,6 +1,5 @@
-
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 async function getAuthenticatedUser(req: NextApiRequest) {
   const authHeader = req.headers.authorization;
@@ -10,7 +9,7 @@ async function getAuthenticatedUser(req: NextApiRequest) {
 
   const token = authHeader.split(' ')[1];
   const { data: { user }, error } = await supabase.auth.getUser(token);
-  
+
   return error || !user ? null : user;
 }
 
@@ -48,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else if (req.method === 'POST') {
     try {
       const transactionData = { ...req.body, userId: user.id };
-      
+
       const { data: transaction, error } = await supabase
         .from('transactions')
         .insert(transactionData)
