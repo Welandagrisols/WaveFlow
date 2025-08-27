@@ -51,32 +51,56 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create account');
+      // Use client-side Supabase authentication
+      const { supabase } = await import('../lib/supabase');
+      
+      if (!supabase) {
+        throw new Error('Authentication service not available');
       }
 
-      if (data.needsConfirmation) {
-        setSuccess(data.message + ' You can also try signing in directly if email confirmation is not working.');
-      } else {
-        setSuccess('Account created successfully! Redirecting to login...');
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName || '',
+            last_name: formData.lastName || '',
+          }
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.user) {
+        // Account created successfully
+        if (data.session) {
+          // User is already signed in, redirect to dashboard
+          setSuccess('Account created successfully! Redirecting to dashboard...');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1500);
+        } else {
+          // Email confirmation might be required (but we disabled it)
+          // Try to sign in immediately
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (signInError) {
+            setSuccess('Account created successfully! Please sign in.');
+            setTimeout(() => {
+              router.push('/login');
+            }, 2000);
+          } else {
+            setSuccess('Account created successfully! Redirecting to dashboard...');
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 1500);
+          }
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
