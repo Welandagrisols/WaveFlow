@@ -2,24 +2,19 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Supabase configuration check:');
-  console.log('- URL configured:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log('- Key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  // Create server-side Supabase client with direct environment variables
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  console.log('Supabase configuration check:');
+  console.log('- URL configured:', !!supabaseUrl);
+  console.log('- Key configured:', !!supabaseAnonKey);
+
+  if (!supabaseUrl || !supabaseAnonKey) {
     return res.status(500).json({ error: 'Supabase configuration missing' });
   }
 
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseKey) {
-    return res.status(500).json({ error: 'Supabase key configuration missing' });
-  }
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey
-  );
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
     console.log('✅ Supabase client initialized successfully');
