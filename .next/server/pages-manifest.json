@@ -5,5 +5,8 @@
   "/": "pages/index.js",
   "/mobile": "pages/mobile.js",
   "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js",
-  "/api/transactions/summary": "pages/api/transactions/summary.js"
+  "/api/transactions/summary": "pages/api/transactions/summary.js",
+  "/sms-confirmation": "pages/sms-confirmation.js",
+  "/transactions": "pages/transactions.js",
+  "/api/transactions": "pages/api/transactions.js"
 }
