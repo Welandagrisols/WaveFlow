@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, Search, Bell, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PWAStatus } from "@/components/PWAStatus";
+import { PWAStatus } from "../../client/src/components/PWAStatus";
 
 interface HeaderProps {
   onMenuClick: () => void;

@@ -1,5 +1,5 @@
 
-import Landing from "@/pages/landing";
+import Landing from "../../client/src/pages/landing";
 
 export default function LandingPage() {
   return <Landing />;
