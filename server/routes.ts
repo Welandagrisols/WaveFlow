@@ -13,7 +13,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -25,9 +25,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Categories routes
   app.get("/api/categories", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       let categories = await storage.getCategories(userId);
-      
+
       // If no categories exist, create default ones
       if (categories.length === 0) {
         const defaultCategories = [
@@ -46,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { name: "Transportation", color: "#F59E0B", type: "expense" as const },
           { name: "Professional Services", color: "#14B8A6", type: "expense" as const },
           { name: "Personal Expenses", color: "#F97316", type: "expense" as const },
-          
+
           // Hotel Revenue - Income
           { name: "Room Revenue", color: "#22C55E", type: "income" as const },
           { name: "Restaurant Revenue", color: "#8B5CF6", type: "income" as const },
@@ -57,11 +57,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const categoryData of defaultCategories) {
           await storage.createCategory({ ...categoryData, userId });
         }
-        
+
         // Fetch the newly created categories
         categories = await storage.getCategories(userId);
       }
-      
+
       res.json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -71,13 +71,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/categories", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const categoryData = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory({ ...categoryData, userId });
-      
+
       // Broadcast real-time update to all user's devices
       wsManager.broadcastCategoryUpdate(userId, category);
-      
+
       res.json(category);
     } catch (error) {
       console.error("Error creating category:", error);
@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Transactions routes
   app.get("/api/transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const transactions = await storage.getTransactions(userId, limit, offset);
@@ -101,13 +101,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const transactionData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction({ ...transactionData, userId });
-      
+
       // Broadcast real-time update to all user's devices
       wsManager.broadcastTransactionUpdate(userId, transaction);
-      
+
       res.json(transaction);
     } catch (error) {
       console.error("Error creating transaction:", error);
@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/transactions/summary", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       const summary = await storage.getTransactionsSummary(userId, startDate, endDate);
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/transactions/by-category", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       const categories = await storage.getTransactionsByCategory(userId, startDate, endDate);
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment reminders routes
   app.get("/api/payment-reminders", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const reminders = await storage.getPaymentReminders(userId);
       res.json(reminders);
     } catch (error) {
@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payment-reminders", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const reminderData = insertPaymentReminderSchema.parse(req.body);
       const reminder = await storage.createPaymentReminder({ ...reminderData, userId });
       res.json(reminder);
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/payment-reminders/:id/status", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { id } = req.params;
       const { status } = req.body;
       const reminder = await storage.updatePaymentReminderStatus(id, userId, status);
@@ -184,20 +184,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SMS Transaction routes
   app.post("/api/sms-transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { smsText, senderNumber, simCard } = req.body;
-      
+
       // Parse the SMS
       const parsedTransaction = MpesaSmsParser.parseSms(smsText);
-      
+
       if (!parsedTransaction.isValid) {
         return res.status(400).json({ message: "Unable to parse SMS transaction" });
       }
-      
+
       // Determine SIM and account type
       const detectedSimCard = simCard || MpesaSmsParser.detectSimCard(senderNumber, smsText);
       const accountType = MpesaSmsParser.classifyAccountType(parsedTransaction.recipientName, parsedTransaction.amount);
-      
+
       // Create SMS transaction record
       const smsTransaction = await storage.createSmsTransaction({
         smsText,
@@ -212,13 +212,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isConfirmed: false,
         userId
       });
-      
+
       // Check if we know this supplier
       let supplier = null;
       if (parsedTransaction.recipientPhone) {
         supplier = await storage.getSupplierByPhone(userId, parsedTransaction.recipientPhone);
       }
-      
+
       res.json({
         smsTransaction: {
           ...smsTransaction,
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sms-transactions/unconfirmed", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const unconfirmedTransactions = await storage.getUnconfirmedSmsTransactions(userId);
       res.json(unconfirmedTransactions);
     } catch (error) {
@@ -248,18 +248,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/sms-transactions/:id/confirm", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { id } = req.params;
       const { itemName, supplierName, categoryId, isPersonal, isLoan, loanRecipient, expectedRepaymentDate } = req.body;
-      
+
       // Get the SMS transaction
       const smsTransactions = await storage.getUnconfirmedSmsTransactions(userId);
       const smsTransaction = smsTransactions.find(t => t.id === id);
-      
+
       if (!smsTransaction) {
         return res.status(404).json({ message: "SMS transaction not found" });
       }
-      
+
       // Create the actual transaction
       const transaction = await storage.createTransaction({
         amount: smsTransaction.amount,
@@ -280,10 +280,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionDate: smsTransaction.createdAt,
         userId
       });
-      
+
       // Confirm SMS transaction
       await storage.confirmSmsTransaction(id, userId, itemName, supplierName, categoryId);
-      
+
       // Update or create supplier
       if (smsTransaction.recipientPhone && supplierName) {
         let supplier = await storage.getSupplierByPhone(userId, smsTransaction.recipientPhone);
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateSupplierItems(supplier.id, userId, itemName);
         }
       }
-      
+
       // Update or create item
       if (itemName) {
         let item = await storage.getItemByName(userId, itemName);
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateItemPrice(item.id, userId, Number(smsTransaction.amount));
         }
       }
-      
+
       res.json({ transaction, confirmed: true });
     } catch (error) {
       console.error("Error confirming SMS transaction:", error);
@@ -332,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Suppliers routes
   app.get("/api/suppliers", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const suppliers = await storage.getSuppliers(userId);
       res.json(suppliers);
     } catch (error) {
@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items routes
   app.get("/api/items", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { categoryId } = req.query;
       const items = await storage.getItems(userId, categoryId as string);
       res.json(items);
@@ -357,24 +357,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics endpoint for supplier spending
   app.get("/api/analytics/suppliers", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
-      
+
       const transactions = await storage.getTransactions(userId, 1000, 0);
       const suppliers = await storage.getSuppliers(userId);
-      
+
       const supplierAnalytics = suppliers.map((supplier: any) => {
         const supplierTransactions = transactions.filter((t: any) => 
           t.payeePhone === supplier.phone &&
           (!startDate || new Date(t.transactionDate) >= new Date(startDate as string)) &&
           (!endDate || new Date(t.transactionDate) <= new Date(endDate as string))
         );
-        
+
         const totalAmount = supplierTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
         const avgAmount = supplierTransactions.length > 0 ? totalAmount / supplierTransactions.length : 0;
         const lastTransaction = supplierTransactions.length > 0 ? 
           Math.max(...supplierTransactions.map((t: any) => new Date(t.transactionDate).getTime())) : 0;
-        
+
         return {
           ...supplier,
           totalSpent: totalAmount,
@@ -386,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }).filter((s: any) => s.totalSpent > 0)
         .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
-      
+
       res.json(supplierAnalytics);
     } catch (error) {
       console.error("Error fetching supplier analytics:", error);
@@ -397,26 +397,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics endpoint for item spending
   app.get("/api/analytics/items", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate, categoryId } = req.query;
-      
+
       const transactions = await storage.getTransactions(userId, 1000, 0);
       const items = await storage.getItems(userId, categoryId as string);
-      
+
       const itemAnalytics = items.map((item: any) => {
         const itemTransactions = transactions.filter((t: any) => 
           t.description?.toLowerCase().includes(item.name.toLowerCase()) &&
           (!startDate || new Date(t.transactionDate) >= new Date(startDate as string)) &&
           (!endDate || new Date(t.transactionDate) <= new Date(endDate as string))
         );
-        
+
         const totalAmount = itemTransactions.reduce((sum, t: any) => sum + parseFloat(t.amount), 0);
         const avgAmount = itemTransactions.length > 0 ? totalAmount / itemTransactions.length : 0;
         const lastPrice = itemTransactions.length > 0 ? 
           parseFloat(itemTransactions.sort((a: any, b: any) => 
             new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
           )[0].amount) : 0;
-        
+
         return {
           ...item,
           totalSpent: totalAmount,
@@ -428,7 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }).filter((i: any) => i.totalSpent > 0)
         .sort((a: any, b: any) => b.totalSpent - a.totalSpent);
-      
+
       res.json(itemAnalytics);
     } catch (error) {
       console.error("Error fetching item analytics:", error);
@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Loan tracking routes
   app.get("/api/loans/outstanding", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const outstandingLoans = await storage.getOutstandingLoans(userId);
       res.json(outstandingLoans);
     } catch (error) {
@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/loans/:transactionId/repaid", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { transactionId } = req.params;
       await storage.markLoanAsRepaid(transactionId, userId);
       res.json({ message: "Loan marked as repaid successfully" });
@@ -463,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Personal expenses summary route
   app.get("/api/personal-expenses/summary", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
       const summary = await storage.getPersonalExpensesSummary(
         userId,
@@ -480,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize personal categories for new users
   app.post("/api/categories/init-personal", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       await storage.initializePersonalCategories(userId);
       res.json({ message: "Personal categories initialized successfully" });
     } catch (error) {
@@ -492,9 +492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Data export routes
   app.get("/api/export/json", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
-      
+
       const [transactions, categories, suppliers, paymentReminders] = await Promise.all([
         storage.getTransactions(userId, 10000, 0),
         storage.getCategories(userId),
@@ -536,10 +536,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/export/csv", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
       const Papa = (await import('papaparse')).default;
-      
+
       const [transactions, categories] = await Promise.all([
         storage.getTransactions(userId, 10000, 0),
         storage.getCategories(userId)
@@ -580,11 +580,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/export/pdf", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
       const jsPDF = (await import('jspdf')).default;
       const autoTable = (await import('jspdf-autotable')).default;
-      
+
       const [transactions, categories, user] = await Promise.all([
         storage.getTransactions(userId, 10000, 0),
         storage.getCategories(userId),
@@ -600,14 +600,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const doc = new jsPDF();
-      
+
       // Header
       doc.setFontSize(20);
       doc.text('Yasinga Financial Report', 20, 30);
       doc.setFontSize(12);
       doc.text(`Generated for: ${user?.firstName || 'User'} ${user?.lastName || ''}`, 20, 45);
       doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 20, 55);
-      
+
       if (startDate || endDate) {
         doc.text(`Period: ${startDate ? new Date(startDate as string).toLocaleDateString() : 'Beginning'} - ${endDate ? new Date(endDate as string).toLocaleDateString() : 'Present'}`, 20, 65);
       }
@@ -659,9 +659,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Backup functionality
   app.post("/api/backup/email", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { email } = req.body;
-      
+
       if (!email) {
         return res.status(400).json({ message: "Email address is required" });
       }
