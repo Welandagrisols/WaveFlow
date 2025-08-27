@@ -56,13 +56,37 @@ export default {
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
         },
-        // Yasinga brand colors
+        // Yasinga brand colors - Wave/PayPal inspired
         'yasinga': {
           'primary': '#0066CC',
           'secondary': '#00A3CC',
           'success': '#00C851',
           'warning': '#FF8800',
           'error': '#FF4444',
+        },
+        // Wave Accounting inspired colors
+        'wave': {
+          'blue': {
+            50: '#f0f9ff',
+            500: '#3b82f6',
+            600: '#2563eb',
+            700: '#1d4ed8',
+          },
+          'teal': {
+            50: '#f0fdfa',
+            500: '#14b8a6',
+            600: '#0d9488',
+            700: '#0f766e',
+          },
+          'slate': {
+            50: '#f8fafc',
+            100: '#f1f5f9',
+            200: '#e2e8f0',
+            300: '#cbd5e1',
+            500: '#64748b',
+            700: '#334155',
+            800: '#1e293b',
+          }
         },
         sidebar: {
           DEFAULT: "var(--sidebar-background)",

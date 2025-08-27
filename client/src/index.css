@@ -99,6 +99,33 @@
   }
 }
 
+/* Enhanced Wave/PayPal inspired styling */
+.wave-card {
+  @apply bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200;
+}
+
+.wave-button-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.wave-button-secondary {
+  @apply bg-white hover:bg-slate-50 text-slate-700 font-medium px-6 py-2.5 rounded-lg border border-slate-200 transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.wave-input {
+  @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, select, textarea, [role="button"] {
+  @apply transition-all duration-200;
+}
+
+/* Enhanced hover effects */
+.hover-lift:hover {
+  @apply transform -translate-y-0.5 shadow-lg;
+}
+
 /* iOS PWA fixes */
 @supports (-webkit-touch-callout: none) {
   .ios-safe-area {

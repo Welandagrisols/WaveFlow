@@ -171,16 +171,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Enhanced Header with gradient background */}
-        <div className="relative bg-gradient-to-r from-yasinga-primary to-yasinga-secondary rounded-2xl p-8 text-white shadow-xl">
-          <div className="absolute inset-0 bg-black/10 rounded-2xl"></div>
-          <div className="relative flex items-center justify-between">
+        {/* Wave-inspired clean header */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-8">
+          <div className="flex items-center justify-between">
             <div className="yasinga-fade-in">
-              <h1 className="text-4xl font-bold mb-2">
-                Welcome back, {user?.email?.split('@')[0] || 'User'}! 👋
+              <h1 className="text-3xl font-semibold text-slate-800 mb-2">
+                Welcome back, {user?.email?.split('@')[0] || 'User'}
               </h1>
-              <p className="text-white/90 text-lg">
-                Here's your financial overview
+              <p className="text-slate-600 text-lg">
+                Here's your financial overview for today
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -258,13 +257,13 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Transactions with enhanced styling */}
           <div className="lg:col-span-2 yasinga-fade-in">
-            <Card className="yasinga-card border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <Card className="wave-card bg-white">
               <CardHeader className="flex flex-row items-center justify-between pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-yasinga-primary/10 rounded-lg flex items-center justify-center">
-                    <Receipt className="w-5 h-5 text-yasinga-primary" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <Receipt className="w-6 h-6 text-blue-600" />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-slate-800">
+                  <CardTitle className="text-xl font-medium text-slate-800">
                     Recent Transactions
                   </CardTitle>
                 </div>
@@ -316,26 +315,26 @@ export default function Dashboard() {
 
           {/* Enhanced Quick Actions */}
           <div className="space-y-6 yasinga-fade-in">
-            <Card className="yasinga-card border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <Card className="wave-card bg-white">
               <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-yasinga-secondary/10 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-yasinga-secondary" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-teal-600" />
                   </div>
-                  <CardTitle className="text-lg font-semibold text-slate-800">
+                  <CardTitle className="text-xl font-medium text-slate-800">
                     Quick Actions
                   </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <Button
                   onClick={() => window.location.href = '/send-money'}
-                  className="w-full yasinga-btn-primary justify-start h-12 text-left shadow-md hover:shadow-lg transition-all duration-200"
+                  className="w-full wave-button-primary justify-start h-14 text-left hover-lift"
                 >
-                  <Send className="mr-3 h-5 w-5" />
-                  <div>
-                    <div className="font-semibold">Send Money</div>
-                    <div className="text-xs opacity-90">Transfer funds instantly</div>
+                  <Send className="mr-4 h-5 w-5" />
+                  <div className="text-left">
+                    <div className="font-medium">Send Money</div>
+                    <div className="text-sm opacity-90">Transfer funds instantly</div>
                   </div>
                 </Button>
                 <Button
