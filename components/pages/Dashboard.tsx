@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Smartphone, PlusCircle, BarChart3, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Search, Smartphone, PlusCircle, BarChart3, TrendingUp, TrendingDown, Wallet, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface TransactionDisplay {
@@ -81,6 +81,26 @@ export default function Dashboard() {
                   <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto">
                     Start tracking your M-Pesa transactions by adding your first SMS or transaction
                   </p>
+                </div>
+
+                {/* Featured: Auto-Detection */}
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <Zap className="w-6 h-6 text-yellow-600" />
+                    <h3 className="font-bold text-yellow-800 text-lg">NEW: Automatic SMS Detection</h3>
+                  </div>
+                  <p className="text-yellow-700 text-center text-sm mb-4">
+                    Let Yasinga automatically detect and process your M-Pesa SMS messages in real-time. 
+                    No more manual entry!
+                  </p>
+                  <div className="text-center">
+                    <Link href="/sms-auto-detect">
+                      <Button className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3">
+                        <Zap className="w-4 h-4 mr-2" />
+                        Try Auto-Detection
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto">

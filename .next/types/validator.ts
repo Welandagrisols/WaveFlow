@@ -87,6 +87,12 @@ type PagesPageConfig = {
   handler satisfies PagesPageConfig
 }
 
+// Validate ../../pages/sms-auto-detect.tsx
+{
+  const handler = {} as typeof import("../../pages/sms-auto-detect.js")
+  handler satisfies PagesPageConfig
+}
+
 // Validate ../../pages/sms-confirmation.tsx
 {
   const handler = {} as typeof import("../../pages/sms-confirmation.js")
