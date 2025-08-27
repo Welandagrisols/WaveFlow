@@ -25,20 +25,25 @@ globalThis.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/dashboard.js"
     ],
+    "/mobile": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/mobile.js"
+    ],
     "/personal-tracking": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/personal-tracking.js"
     ],
-    "/sms-confirmation": [
+    "/send-money": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/sms-confirmation.js"
+      "static/chunks/pages/send-money.js"
     ],
-    "/track-payments": [
+    "/sim-management": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/track-payments.js"
+      "static/chunks/pages/sim-management.js"
     ]
   },
   "ampFirstPages": []
