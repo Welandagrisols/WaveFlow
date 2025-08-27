@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import TransactionItem from "@/components/financial/transaction-item";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw } from "lucide-react";
+import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Transaction } from "@shared/schema";
@@ -151,7 +154,7 @@ export default function Dashboard() {
 
       {/* Main Navigation Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 lg:w-fit">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:w-fit bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-1">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
@@ -315,7 +318,7 @@ export default function Dashboard() {
                   <Send className="h-5 w-5 text-blue-500" />
                   Send Money
                 </CardTitle>
-                <CardDescription>Transfer money to contacts</CardDescription>
+                <p className="text-sm text-muted-foreground">Transfer money to contacts</p>
               </CardHeader>
             </Card>
 
@@ -325,7 +328,7 @@ export default function Dashboard() {
                   <Search className="h-5 w-5 text-green-500" />
                   Track Payment
                 </CardTitle>
-                <CardDescription>Track transaction status</CardDescription>
+                <p className="text-sm text-muted-foreground">Track transaction status</p>
               </CardHeader>
             </Card>
 
@@ -335,7 +338,7 @@ export default function Dashboard() {
                   <PlusCircle className="h-5 w-5 text-purple-500" />
                   Add Expense
                 </CardTitle>
-                <CardDescription>Record personal expenses</CardDescription>
+                <p className="text-sm text-muted-foreground">Record personal expenses</p>
               </CardHeader>
             </Card>
           </div>
@@ -347,7 +350,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Transaction History</CardTitle>
-              <CardDescription>View and manage your transactions</CardDescription>
+              <p className="text-sm text-muted-foreground">View and manage your transactions</p>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -467,7 +470,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>SMS Management</CardTitle>
-              <CardDescription>Manage and confirm SMS transactions</CardDescription>
+              <p className="text-sm text-muted-foreground">Manage and confirm SMS transactions</p>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -492,7 +495,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Personal Expenses</CardTitle>
-              <CardDescription>Track your personal spending and budgets</CardDescription>
+              <p className="text-sm text-muted-foreground">Track your personal spending and budgets</p>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -514,7 +517,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Financial Reports</CardTitle>
-              <CardDescription>Generate detailed financial reports and analytics</CardDescription>
+              <p className="text-sm text-muted-foreground">Generate detailed financial reports and analytics</p>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -536,7 +539,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>SIM & Settings</CardTitle>
-              <CardDescription>Manage your SIM cards and application settings</CardDescription>
+              <p className="text-sm text-muted-foreground">Manage your SIM cards and application settings</p>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
