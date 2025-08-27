@@ -2,14 +2,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../lib/supabase';
 
+type SupabaseClient = typeof supabase;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!supabase) {
+  const client = supabase as SupabaseClient;
+  if (!client) {
     return res.status(500).json({ error: 'Database not configured' });
   }
 
   if (req.method === 'GET') {
     try {
-      const { data: transactions, error } = await supabase
+      const { data: transactions, error } = await client
         .from('transactions')
         .select(`
           *,
@@ -30,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     try {
-      const { data: transaction, error } = await supabase
+      const { data: transaction, error } = await client
         .from('transactions')
         .insert(req.body)
         .select()
