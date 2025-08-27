@@ -2,11 +2,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('Supabase configuration check:');
   console.log('- URL configured:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -17,6 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     console.log('✅ Supabase client initialized successfully');
 
     if (req.method === 'GET') {
