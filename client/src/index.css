@@ -152,18 +152,48 @@ textarea {
   }
   
   .yasinga-fade-in {
-    animation: yasingaFadeIn 0.3s ease-in;
+    animation: yasingaFadeIn 0.6s ease-out forwards;
+  }
+  
+  .yasinga-slide-up {
+    animation: yasingaSlideUp 0.5s ease-out;
+  }
+  
+  .yasinga-scale-in {
+    animation: yasingaScaleIn 0.4s ease-out;
   }
 }
 
 @keyframes yasingaFadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes yasingaSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes yasingaScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

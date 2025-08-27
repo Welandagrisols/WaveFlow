@@ -8,13 +8,16 @@ import TransactionItem from "@/components/financial/transaction-item";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
-import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3, FileText, User, MessageSquare, Wallet, Send, Search, Filter, Download, RefreshCw, ArrowDownRight, ArrowUpRight, Receipt, AlertCircle, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Transaction } from "@shared/schema";
+
+// Placeholder for PWAStatus component if it exists elsewhere
+const PWAStatus = () => null;
 
 interface TransactionDisplay {
   id: string;
@@ -57,6 +60,10 @@ export default function Dashboard() {
   const [confirmationFilter, setConfirmationFilter] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Add state for unconfirmed SMS count
+  const [unconfirmedSmsCount, setUnconfirmedSmsCount] = useState(0);
+
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -78,7 +85,7 @@ export default function Dashboard() {
       if (!isSupabaseConfigured) {
         throw new Error('Supabase not configured');
       }
-      
+
       const { data, error } = await (supabase as any)
         .from('transactions')
         .select(`
@@ -204,426 +211,163 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-2 sm:p-4 lg:p-8 yasinga-fade-in">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Yasinga Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage your M-Pesa transactions and expenses
-          </p>
-        </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Data
-        </Button>
-      </div>
-
-      {/* Main Navigation Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:w-fit bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-1">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="transactions" className="flex items-center gap-2">
-            <Wallet className="h-4 w-4" />
-            Transactions
-          </TabsTrigger>
-          <TabsTrigger value="sms" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            SMS
-          </TabsTrigger>
-          <TabsTrigger value="personal" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Personal
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Reports
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Smartphone className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          {/* Welcome Experience for New Users */}
-          {showWelcome && (
-            <div className="mb-6 sm:mb-8">
-              <Card className="yasinga-card bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
-                <CardContent className="p-4 sm:p-6 lg:p-8">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 sm:space-x-2 mb-4">
-                      <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
-                      <h2 className="text-xl sm:text-2xl font-bold text-slate-800 text-center">Welcome to Yasinga!</h2>
-                      <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
-                    </div>
-                    <p className="text-sm sm:text-lg text-slate-600 mb-4 sm:mb-6 text-center px-2">
-                      Your smart M-Pesa expense tracker is ready to help you manage your business finances.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                      <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-blue-100">
-                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg mx-auto mb-2 sm:mb-3">
-                          <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        </div>
-                        <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">1. Connect M-Pesa</h3>
-                        <p className="text-xs sm:text-sm text-slate-600 text-center">Add M-Pesa transactions or SMS confirmations</p>
-                      </div>
-
-                      <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-green-100">
-                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg mx-auto mb-2 sm:mb-3">
-                          <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        </div>
-                        <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">2. Categorize</h3>
-                        <p className="text-xs sm:text-sm text-slate-600 text-center">Organize into business categories</p>
-                      </div>
-
-                      <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-purple-100">
-                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg mx-auto mb-2 sm:mb-3">
-                          <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-                        </div>
-                        <h3 className="font-semibold text-slate-800 mb-1 sm:mb-2 text-sm sm:text-base text-center">3. Track & Analyze</h3>
-                        <p className="text-xs sm:text-sm text-slate-600 text-center">View reports and insights</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-2">
-                      <Link href="/confirm-sms" className="w-full sm:w-auto">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-add-sms">
-                          <Smartphone className="w-4 h-4 mr-2" />
-                          Add M-Pesa SMS
-                        </Button>
-                      </Link>
-                      <Link href="/transactions" className="w-full sm:w-auto">
-                        <Button variant="outline" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-add-transaction">
-                          <PlusCircle className="w-4 h-4 mr-2" />
-                          Add Transaction
-                        </Button>
-                      </Link>
-                      <Link href="/reports" className="w-full sm:w-auto">
-                        <Button variant="ghost" className="px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base w-full sm:w-auto min-h-[44px]" data-testid="button-view-reports">
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          View Reports
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Enhanced Header with gradient background */}
+        <div className="relative bg-gradient-to-r from-yasinga-primary to-yasinga-secondary rounded-2xl p-8 text-white shadow-xl">
+          <div className="absolute inset-0 bg-black/10 rounded-2xl"></div>
+          <div className="relative flex items-center justify-between">
+            <div className="yasinga-fade-in">
+              <h1 className="text-4xl font-bold mb-2">
+                Welcome back, {user?.email?.split('@')[0] || 'User'}! 👋
+              </h1>
+              <p className="text-white/90 text-lg">
+                Here's your financial overview
+              </p>
             </div>
-          )}
-
-          {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  KSh {summary ? (summary.totalIncome - summary.totalExpenses).toLocaleString() : '0'}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Received</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  KSh {summary?.totalIncome.toLocaleString() || '0'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Total received
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  KSh {summary?.totalExpenses.toLocaleString() || '0'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Total expenses
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Unconfirmed SMS</CardTitle>
-                <MessageSquare className="h-4 w-4 text-yellow-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {summary?.transactionCount || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Pending confirmation
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Send className="h-5 w-5 text-blue-500" />
-                  Send Money
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Transfer money to contacts</p>
-              </CardHeader>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Search className="h-5 w-5 text-green-500" />
-                  Track Payment
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Track transaction status</p>
-              </CardHeader>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <PlusCircle className="h-5 w-5 text-purple-500" />
-                  Add Expense
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Record personal expenses</p>
-              </CardHeader>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Transactions Tab */}
-        <TabsContent value="transactions" className="space-y-6">
-          {/* Transaction Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Transaction History</CardTitle>
-              <p className="text-sm text-muted-foreground">View and manage your transactions</p>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="flex items-center space-x-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search transactions..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="md:w-80"
-                  />
-                </div>
-
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full md:w-40">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="received">Received</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="expense">Expenses</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={confirmationFilter} onValueChange={setConfirmationFilter}>
-                  <SelectTrigger className="w-full md:w-40">
-                    <SelectValue placeholder="Filter status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="unconfirmed">Unconfirmed</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Transactions List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Transaction Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {filteredTransactions.length === 0 ? (
-                <div className="text-center py-8">
-                  <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No transactions found</p>
-                </div>
-              ) : (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {filteredTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-2 rounded-full ${
-                          transaction.type === 'received' ? 'bg-green-100 text-green-600' :
-                          transaction.type === 'sent' ? 'bg-red-100 text-red-600' :
-                          'bg-blue-100 text-blue-600'
-                        }`}>
-                          {transaction.type === 'received' ? (
-                            <ArrowDownRight className="h-4 w-4" />
-                          ) : transaction.type === 'sent' ? (
-                            <ArrowUpRight className="h-4 w-4" />
-                          ) : (
-                            <Wallet className="h-4 w-4" />
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="font-medium">{transaction.description}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{format(new Date(transaction.timestamp || transaction.transactionDate), 'MMM dd, yyyy HH:mm')}</span>
-                            {transaction.phone && (
-                              <>
-                                <span>•</span>
-                                <span>{transaction.phone}</span>
-                              </>
-                            )}
-                            {!transaction.isConfirmed && (
-                              <Badge variant="secondary" className="ml-2">
-                                Unconfirmed
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <p className={`font-semibold ${
-                          transaction.type === 'received' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction.type === 'received' ? '+' : '-'}KSh {transaction.amount.toLocaleString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Balance: KSh {(transaction.balance || 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+            <div className="flex items-center gap-4">
+              <PWAStatus />
+              {unconfirmedSmsCount > 0 && (
+                <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-4 flex items-center gap-3 yasinga-fade-in">
+                  <AlertCircle className="h-5 w-5 text-yellow-300" />
+                  <span className="text-white font-medium">
+                    {unconfirmedSmsCount} SMS message{unconfirmedSmsCount !== 1 ? 's' : ''} need confirmation
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => window.location.href = '/sms-confirmation'}
+                    className="ml-2 bg-white text-yasinga-primary hover:bg-white/90 font-semibold"
+                  >
+                    Review
+                  </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        </div>
 
-        {/* SMS Tab */}
-        <TabsContent value="sms" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>SMS Management</CardTitle>
-              <p className="text-sm text-muted-foreground">Manage and confirm SMS transactions</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  All SMS messages are confirmed
-                </p>
-                <Button>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Manage SMS
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Enhanced Summary Cards */}
+        <div className="yasinga-fade-in">
+          <SummaryCards
+            totalExpenses={summary.totalExpenses}
+            totalIncome={summary.totalIncome}
+            totalTransactions={summary.totalTransactions}
+            pendingAmount={summary.pendingAmount}
+          />
+        </div>
 
-        {/* Personal Tab */}
-        <TabsContent value="personal" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Expenses</CardTitle>
-              <p className="text-sm text-muted-foreground">Track your personal spending and budgets</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  Manage your personal expense categories and budgets
-                </p>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add Expense
+        {/* Enhanced Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Transactions with enhanced styling */}
+          <div className="lg:col-span-2 yasinga-fade-in">
+            <Card className="yasinga-card border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-yasinga-primary/10 rounded-lg flex items-center justify-center">
+                    <Receipt className="w-5 h-5 text-yasinga-primary" />
+                  </div>
+                  <CardTitle className="text-xl font-semibold text-slate-800">
+                    Recent Transactions
+                  </CardTitle>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = '/transactions'}
+                  className="yasinga-btn-primary border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  View All
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardHeader>
+              <CardContent>
+                {transactions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Receipt className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-700 mb-2">No transactions yet</h3>
+                    <p className="text-slate-500 mb-4">
+                      Your transactions will appear here when you start tracking expenses
+                    </p>
+                    <Button
+                      onClick={() => window.location.href = '/transactions'}
+                      className="yasinga-btn-primary"
+                    >
+                      Add Transaction
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {transactions.slice(0, 5).map((transaction, index) => (
+                      <div
+                        key={transaction.id}
+                        className="yasinga-fade-in"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <TransactionItem
+                          transaction={transaction}
+                          categories={categoryData}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Reports Tab */}
-        <TabsContent value="reports" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Reports</CardTitle>
-              <p className="text-sm text-muted-foreground">Generate detailed financial reports and analytics</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  View comprehensive financial reports and spending analytics
-                </p>
-                <Button>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Generate Report
+          {/* Enhanced Quick Actions */}
+          <div className="space-y-6 yasinga-fade-in">
+            <Card className="yasinga-card border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-yasinga-secondary/10 rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-yasinga-secondary" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-slate-800">
+                    Quick Actions
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={() => window.location.href = '/send-money'}
+                  className="w-full yasinga-btn-primary justify-start h-12 text-left shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <Send className="mr-3 h-5 w-5" />
+                  <div>
+                    <div className="font-semibold">Send Money</div>
+                    <div className="text-xs opacity-90">Transfer funds instantly</div>
+                  </div>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>SIM & Settings</CardTitle>
-              <p className="text-sm text-muted-foreground">Manage your SIM cards and application settings</p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  Configure SIM cards and customize your app settings
-                </p>
-                <Button>
-                  <Smartphone className="h-4 w-4 mr-2" />
-                  Manage SIMs
+                <Button
+                  onClick={() => window.location.href = '/track-payments'}
+                  variant="outline"
+                  className="w-full justify-start h-12 border-yasinga-primary text-yasinga-primary hover:bg-yasinga-primary hover:text-white shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <TrendingUp className="mr-3 h-5 w-5" />
+                  <div className="text-left">
+                    <div className="font-semibold">Track Payments</div>
+                    <div className="text-xs opacity-70">Monitor transactions</div>
+                  </div>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                <Button
+                  onClick={() => window.location.href = '/reports'}
+                  variant="outline"
+                  className="w-full justify-start h-12 border-yasinga-secondary text-yasinga-secondary hover:bg-yasinga-secondary hover:text-white shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <BarChart3 className="mr-3 h-5 w-5" />
+                  <div className="text-left">
+                    <div className="font-semibold">View Reports</div>
+                    <div className="text-xs opacity-70">Analyze spending</div>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
