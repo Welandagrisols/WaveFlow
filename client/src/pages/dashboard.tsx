@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import SummaryCards from "@/components/financial/summary-cards";
@@ -7,11 +7,25 @@ import { Button } from "@/components/ui/button";
 import TransactionItem from "@/components/financial/transaction-item";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle } from "lucide-react";
+import { ArrowRight, TrendingUp, TrendingDown, Clock, CheckCircle, Star, Smartphone, PlusCircle, BarChart3 } from "lucide-react";
+import type { Transaction } from "@shared/schema";
+
+interface CategoryData {
+  categoryName: string;
+  amount: number;
+  count: number;
+}
+
+interface SummaryData {
+  totalIncome: number;
+  totalExpenses: number;
+  transactionCount: number;
+}
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -28,20 +42,29 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
     enabled: isAuthenticated,
   });
 
-  const { data: summary, isLoading: summaryLoading } = useQuery({
+  const { data: summary, isLoading: summaryLoading } = useQuery<SummaryData>({
     queryKey: ["/api/transactions/summary"],
     enabled: isAuthenticated,
   });
 
-  const { data: categoryData = [], isLoading: categoryLoading } = useQuery({
+  const { data: categoryData = [], isLoading: categoryLoading } = useQuery<CategoryData[]>({
     queryKey: ["/api/transactions/by-category"],
     enabled: isAuthenticated,
   });
+
+  // Check if user is new (no transactions)
+  useEffect(() => {
+    if (transactions && transactions.length === 0 && !transactionsLoading) {
+      setShowWelcome(true);
+    } else {
+      setShowWelcome(false);
+    }
+  }, [transactions, transactionsLoading]);
 
   const recentTransactions = transactions.slice(0, 5);
   const topCategories = categoryData.slice(0, 4);
@@ -66,6 +89,73 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 lg:p-8 yasinga-fade-in">
+      {/* Welcome Experience for New Users */}
+      {showWelcome && (
+        <div className="mb-8">
+          <Card className="yasinga-card bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <div className="flex items-center justify-center space-x-2 mb-4">
+                  <Star className="w-8 h-8 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-slate-800">Welcome to Yasinga!</h2>
+                  <Star className="w-8 h-8 text-yellow-500" />
+                </div>
+                <p className="text-lg text-slate-600 mb-6">
+                  Your smart M-Pesa expense tracker is ready to help you manage your business finances.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
+                      <Smartphone className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-2">1. Connect Your M-Pesa</h3>
+                    <p className="text-sm text-slate-600">Start by adding your first M-Pesa transaction or SMS confirmation</p>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                    <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
+                      <PlusCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-2">2. Categorize Expenses</h3>
+                    <p className="text-sm text-slate-600">Organize transactions into business categories like food, supplies, etc.</p>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100">
+                    <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
+                      <BarChart3 className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-2">3. Track & Analyze</h3>
+                    <p className="text-sm text-slate-600">View reports and insights to optimize your business spending</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href="/confirm-sms">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3" data-testid="button-add-sms">
+                      <Smartphone className="w-4 h-4 mr-2" />
+                      Add M-Pesa SMS
+                    </Button>
+                  </Link>
+                  <Link href="/transactions">
+                    <Button variant="outline" className="px-6 py-3" data-testid="button-add-transaction">
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Add Transaction
+                    </Button>
+                  </Link>
+                  <Link href="/reports">
+                    <Button variant="ghost" className="px-6 py-3" data-testid="button-view-reports">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      View Reports
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="mb-8">
         <SummaryCards summary={summary} />
@@ -106,7 +196,7 @@ export default function Dashboard() {
                 </div>
               ) : recentTransactions.length > 0 ? (
                 <div className="space-y-4">
-                  {recentTransactions.map((transaction) => (
+                  {recentTransactions.map((transaction: Transaction) => (
                     <TransactionItem key={transaction.id} transaction={transaction} />
                   ))}
                 </div>
@@ -147,9 +237,9 @@ export default function Dashboard() {
                 </div>
               ) : topCategories.length > 0 ? (
                 <div className="space-y-4">
-                  {topCategories.map((category, index) => {
+                  {topCategories.map((category: CategoryData, index: number) => {
                     const colors = ['bg-yasinga-primary', 'bg-yasinga-secondary', 'bg-yasinga-warning', 'bg-yasinga-success'];
-                    const totalAmount = topCategories.reduce((sum, cat) => sum + cat.amount, 0);
+                    const totalAmount = topCategories.reduce((sum: number, cat: CategoryData) => sum + cat.amount, 0);
                     const percentage = totalAmount > 0 ? (category.amount / totalAmount) * 100 : 0;
                     
                     return (
