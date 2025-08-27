@@ -1,23 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Debug environment variables
 console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !!supabaseAnonKey);
+console.log('Supabase Key exists:', !!supabaseKey);
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables');
+// Only validate in production or when real environment variables are provided
+const isDevelopment = process.env.NODE_ENV === 'development';
+const hasRealConfig = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseKey !== 'placeholder-key';
+
+if (!isDevelopment && (!supabaseUrl || !supabaseKey)) {
+  console.error('Missing Supabase environment variables');
+  throw new Error('Missing Supabase environment variables');
 }
 
-// Validate URL format
-const isValidUrl = supabaseUrl && supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
-
-if (!isValidUrl) {
+if (hasRealConfig && (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co'))) {
   console.error('Invalid Supabase URL format. Expected: https://xxx.supabase.co');
+  throw new Error('Invalid Supabase URL format. Expected: https://xxx.supabase.co');
 }
 
-export const supabase = isValidUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = createClient(supabaseUrl, supabaseKey);
