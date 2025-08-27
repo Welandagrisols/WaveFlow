@@ -11,10 +11,10 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
+    if (!loading && user && router.pathname === '/') {
+      router.replace('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router.pathname, router]);
 
   if (loading) {
     return (
