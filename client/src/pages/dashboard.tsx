@@ -541,10 +541,7 @@ export default function Dashboard() {
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground mb-4">
-                  {unconfirmedSmsCount > 0
-                    ? `You have ${unconfirmedSmsCount} unconfirmed SMS messages`
-                    : 'All SMS messages are confirmed'
-                  }
+                  All SMS messages are confirmed
                 </p>
                 <Button>
                   <MessageSquare className="h-4 w-4 mr-2" />
