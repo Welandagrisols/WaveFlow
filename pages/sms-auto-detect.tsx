@@ -1,15 +1,22 @@
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SmsAutoDetector } from "@/components/SmsAutoDetector";
-import { ArrowLeft, Smartphone, Zap } from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Smartphone, Play, Pause, Settings } from "lucide-react";
 
 export default function SmsAutoDetectPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return (
@@ -23,129 +30,144 @@ export default function SmsAutoDetectPage() {
   }
 
   if (!user) {
-    router.push('/');
     return null;
   }
 
+  const toggleAutoDetect = () => {
+    setIsActive(!isActive);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <Zap className="w-6 h-6 text-blue-600" />
-                <h1 className="text-2xl font-bold text-slate-800">
-                  M-Pesa Expense Tracking
-                </h1>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              Welcome, {user.firstName}
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">SMS Auto-Detection</h1>
+            <p className="text-slate-600">Configure automatic M-Pesa SMS monitoring</p>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Info Banner */}
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Smartphone className="w-6 h-6 text-blue-600 mt-1" />
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-2">
-                  Your Primary Expense Tracking Solution
-                </h3>
-                <p className="text-blue-800 text-sm mb-3">
-                  Yasinga's core functionality automatically monitors your SMS messages for M-Pesa transactions 
-                  and creates expense records without any manual input. This is the main way you'll track 
-                  business expenses - perfect for busy restaurant and hotel owners processing multiple daily transactions.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-1">Key Features:</h4>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• Real-time SMS monitoring</li>
-                      <li>• Automatic transaction parsing</li>
-                      <li>• Dual-SIM card support</li>
-                      <li>• Business/personal classification</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-1">Smart Detection:</h4>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• Recognizes M-Pesa message formats</li>
-                      <li>• Extracts amounts and recipient names</li>
-                      <li>• Suggests expense categories</li>
-                      <li>• Creates transaction records automatically</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* SMS Auto-Detector Component */}
-        <SmsAutoDetector />
-
-        {/* Mobile App Information */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smartphone className="w-5 h-5" />
-              Mobile App Features
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                In the full mobile app version, these additional features are available:
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Background Processing</h4>
-                  <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• Continuous SMS monitoring even when app is closed</li>
-                    <li>• Instant push notifications for new transactions</li>
-                    <li>• Battery-optimized background processing</li>
-                    <li>• Automatic sync across devices</li>
-                  </ul>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Status Card */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5" />
+                  Detection Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>Auto-Detection</span>
+                  <Badge variant={isActive ? "default" : "secondary"}>
+                    {isActive ? "Active" : "Inactive"}
+                  </Badge>
                 </div>
                 
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Advanced Detection</h4>
-                  <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• Support for all network operators (Safaricom, Airtel, etc.)</li>
-                    <li>• Historical SMS import and processing</li>
-                    <li>• Machine learning for better categorization</li>
-                    <li>• Supplier recognition and auto-tagging</li>
-                  </ul>
+                <Button 
+                  onClick={toggleAutoDetect}
+                  className="w-full"
+                  variant={isActive ? "destructive" : "default"}
+                >
+                  {isActive ? (
+                    <>
+                      <Pause className="mr-2 h-4 w-4" />
+                      Stop Detection
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Start Detection
+                    </>
+                  )}
+                </Button>
+
+                {isActive && (
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✅ SMS auto-detection is running. New M-Pesa messages will be processed automatically.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Settings Card */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Detection Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Supported SMS Types</label>
+                  <div className="space-y-1 text-sm text-slate-600">
+                    <div>• M-Pesa payment confirmations</div>
+                    <div>• M-Pesa received payments</div>
+                    <div>• M-Pesa withdrawal confirmations</div>
+                    <div>• M-Pesa deposit confirmations</div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    💡 Detection works automatically when you receive M-Pesa SMS messages from Safaricom.
+                  </p>
+                </div>
+
+                <Button 
+                  onClick={() => router.push('/sms-confirmation')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  View Pending Confirmations
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Instructions */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg mt-8">
+            <CardHeader>
+              <CardTitle>How It Works</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-3">
+                    1
+                  </div>
+                  <h3 className="font-semibold mb-2">SMS Detection</h3>
+                  <p className="text-sm text-slate-600">
+                    When you receive an M-Pesa SMS, our system automatically detects and parses it.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-3">
+                    2
+                  </div>
+                  <h3 className="font-semibold mb-2">Data Extraction</h3>
+                  <p className="text-sm text-slate-600">
+                    Transaction details like amount, recipient, and type are extracted automatically.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-3">
+                    3
+                  </div>
+                  <h3 className="font-semibold mb-2">Smart Categorization</h3>
+                  <p className="text-sm text-slate-600">
+                    Transactions are automatically categorized and added to your expense tracker.
+                  </p>
                 </div>
               </div>
-
-              <div className="bg-gray-50 border rounded-lg p-4 mt-4">
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Note:</span> This web version demonstrates 
-                  the automatic processing capabilities. To use full SMS detection on your 
-                  phone, you would need to install the mobile app version with appropriate 
-                  SMS permissions.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,15 +14,40 @@ import {
   TrendingDown,
   Plus,
   Filter,
-  Search
+  Search,
+  Send,
+  Eye,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
+
+interface Transaction {
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+}
+
+interface SummaryData {
+  totalIncome: number;
+  totalExpenses: number;
+  transactionCount: number;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const router = useRouter();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [unconfirmedSmsCount, setUnconfirmedSmsCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<SummaryData>({
+    totalIncome: 0,
+    totalExpenses: 0,
+    transactionCount: 0
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +57,20 @@ export default function Dashboard() {
         if (transactionsResponse.ok) {
           const transactionsData = await transactionsResponse.json();
           setTransactions(transactionsData);
+          
+          // Calculate summary
+          const income = transactionsData
+            .filter((t: Transaction) => t.type === 'income')
+            .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+          const expenses = transactionsData
+            .filter((t: Transaction) => t.type === 'expense')
+            .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+            
+          setSummary({
+            totalIncome: income,
+            totalExpenses: expenses,
+            transactionCount: transactionsData.length
+          });
         }
 
         // Fetch unconfirmed SMS count
@@ -51,257 +89,286 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yasinga-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-blue-600 font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const balance = totalIncome - totalExpenses;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800 mb-2">
-            Welcome back, {user?.firstName || 'User'}!
+            Welcome back, {user?.firstName || user?.email || 'User'}!
           </h1>
-          <p className="text-slate-600">
-            Here's your financial overview for today
-          </p>
+          <p className="text-slate-600">Here's your financial overview</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Total Balance
-              </CardTitle>
-              <Wallet className="h-4 w-4 text-yasinga-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-800">
-                KSh {balance.toLocaleString()}
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {balance >= 0 ? '+' : ''}KSh {(balance - 0).toLocaleString()} from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Income
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                KSh {totalIncome.toLocaleString()}
+                KSh {summary.totalIncome.toLocaleString()}
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                +12% from last month
-              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Expenses
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
-                KSh {totalExpenses.toLocaleString()}
+                KSh {summary.totalExpenses.toLocaleString()}
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                -8% from last month
-              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Pending SMS
-              </CardTitle>
-              <MessageSquare className="h-4 w-4 text-orange-600" />
+              <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+              <FileText className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {unconfirmedSmsCount}
+              <div className="text-2xl font-bold text-blue-600">
+                {summary.transactionCount}
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Messages to confirm
-              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Navigation Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:w-fit bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-1">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="transactions" className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Transactions
-            </TabsTrigger>
-            <TabsTrigger value="sms" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              SMS
-            </TabsTrigger>
-            <TabsTrigger value="personal" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Personal
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Reports
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Smartphone className="h-4 w-4" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {transactions.slice(0, 5).map((transaction, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-2 h-2 rounded-full ${
-                            transaction.type === 'income' ? 'bg-green-500' : 'bg-red-500'
-                          }`} />
-                          <div>
-                            <p className="font-medium text-slate-800">
-                              {transaction.description || 'Transaction'}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                              {new Date(transaction.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`font-semibold ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction.type === 'income' ? '+' : '-'}KSh {transaction.amount.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button className="h-20 flex-col gap-2">
-                      <Plus className="h-5 w-5" />
-                      Add Transaction
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Confirm SMS
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col gap-2">
-                      <FileText className="h-5 w-5" />
-                      View Reports
-                    </Button>
-                    <Button variant="outline" className="h-20 flex-col gap-2">
-                      <Smartphone className="h-5 w-5" />
-                      SIM Settings
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* SMS Auto-Detection Status */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-green-600" />
+              Automatic SMS Detection
+              <Badge variant="default" className="bg-green-600">
+                Active
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-600 mb-4">
+              Your M-Pesa SMS messages are being monitored automatically. 
+              {unconfirmedSmsCount > 0 && (
+                <span className="text-orange-600 font-medium">
+                  {' '}You have {unconfirmedSmsCount} unconfirmed transactions.
+                </span>
+              )}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleNavigation('/sms-confirmation')}
+                variant="outline"
+                size="sm"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Confirm SMS ({unconfirmedSmsCount})
+              </Button>
+              <Button
+                onClick={() => handleNavigation('/sms-auto-detect')}
+                variant="outline"
+                size="sm"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                SMS Settings
+              </Button>
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="transactions">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>All Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">Transactions view coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Action Buttons Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="h-5 w-5 text-blue-600" />
+                Send Money
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">Send M-Pesa payments and track them</p>
+              <Button 
+                onClick={() => handleNavigation('/send-money')}
+                className="w-full"
+              >
+                Send Payment
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="sms">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>SMS Management</CardTitle>
-                {unconfirmedSmsCount > 0 && (
-                  <Badge variant="destructive">{unconfirmedSmsCount} pending</Badge>
-                )}
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">SMS management view coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-green-600" />
+                Track Payments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">Monitor your payment status</p>
+              <Button 
+                onClick={() => handleNavigation('/track-payments')}
+                className="w-full"
+                variant="outline"
+              >
+                View Payments
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="personal">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Personal Expenses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">Personal expenses tracking coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+                View Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">Analyze your spending patterns</p>
+              <Button 
+                onClick={() => handleNavigation('/reports')}
+                className="w-full"
+                variant="outline"
+              >
+                View Reports
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="reports">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Financial Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">Reports view coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-orange-600" />
+                Transactions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">View all your transaction history</p>
+              <Button 
+                onClick={() => handleNavigation('/transactions')}
+                className="w-full"
+                variant="outline"
+              >
+                View All
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="settings">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>SIM Management & Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">Settings view coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-indigo-600" />
+                Personal Tracking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">Track personal expenses</p>
+              <Button 
+                onClick={() => handleNavigation('/personal-tracking')}
+                className="w-full"
+                variant="outline"
+              >
+                Personal View
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-red-600" />
+                SIM Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">Manage your SIM cards and settings</p>
+              <Button 
+                onClick={() => handleNavigation('/sim-management')}
+                className="w-full"
+                variant="outline"
+              >
+                Manage SIMs
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Transactions */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {transactions.length > 0 ? (
+              <div className="space-y-4">
+                {transactions.slice(0, 5).map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${transaction.type === 'income' ? 'bg-green-600' : 'bg-red-600'}`} />
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-slate-600">{transaction.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.type === 'income' ? '+' : '-'}KSh {transaction.amount.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-slate-600">{new Date(transaction.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
+                <Button 
+                  onClick={() => handleNavigation('/transactions')}
+                  variant="outline" 
+                  className="w-full"
+                >
+                  View All Transactions
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Wallet className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600 mb-4">No transactions yet</p>
+                <p className="text-sm text-slate-500 mb-4">
+                  Start by sending money or enable SMS auto-detection to track your M-Pesa transactions
+                </p>
+                <Button 
+                  onClick={() => handleNavigation('/send-money')}
+                  className="mr-2"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Send Money
+                </Button>
+                <Button 
+                  onClick={() => handleNavigation('/sms-auto-detect')}
+                  variant="outline"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Enable SMS Detection
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
