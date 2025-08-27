@@ -210,19 +210,35 @@ export default function SmsConfirmation() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Confirm Transactions</h1>
-          <p className="text-gray-600 dark:text-gray-400">Review and categorize your M-Pesa transactions</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-teal-100 rounded-full flex items-center justify-center">
+              <Smartphone className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">
+            Welcome back, demo!
+          </h1>
+          <p className="text-slate-600 mb-4">
+            Review and categorize your M-Pesa transactions
+          </p>
+          <div className="flex items-center justify-center space-x-2">
+            <Badge variant="secondary" className="bg-teal-100 text-teal-700">
+              <div className="w-2 h-2 bg-teal-500 rounded-full mr-2 animate-pulse"></div>
+              Online
+            </Badge>
+            {unconfirmedTransactions.length > 0 && (
+              <Badge variant="outline" className="border-orange-200 text-orange-700">
+                {unconfirmedTransactions.length} pending
+              </Badge>
+            )}
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Smartphone className="h-5 w-5 text-green-600" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {unconfirmedTransactions.length} pending
-          </span>
-        </div>
-      </div>
+
+      <div className="space-y-6">
 
       {unconfirmedTransactions.length === 0 ? (
         <Card>
@@ -499,6 +515,8 @@ export default function SmsConfirmation() {
           }} />
         </CardContent>
       </Card>
+      </div>
+    </div>
     </div>
   );
 }
