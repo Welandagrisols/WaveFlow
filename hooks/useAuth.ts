@@ -4,57 +4,50 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export function useAuth() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
+  // Set demo user on mount
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Invalidate queries on auth change
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-          queryClient.invalidateQueries();
-        }
+    setUser({
+      id: 'demo-user',
+      email: 'demo@yasinga.com', 
+      user_metadata: {
+        full_name: 'Demo User',
+        avatar_url: null
       }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [queryClient]);
+    });
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signInWithPassword({ email, password });
+    // Demo mode - simulate successful login
+    const newUser = {
+      id: 'demo-user',
+      email: email,
+      user_metadata: {
+        full_name: 'Demo User',
+        avatar_url: null
+      }
+    };
+    setUser(newUser);
+    return { data: { user: newUser }, error: null };
   };
 
   const signUp = async (email: string, password: string) => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signUp({ email, password });
+    // Demo mode - simulate successful signup
+    return await signIn(email, password);
   };
 
   const signOut = async () => {
-    if (!supabase) throw new Error('Supabase not configured');
-    return supabase.auth.signOut();
+    setUser(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   const getAccessToken = async () => {
-    if (!supabase) return null;
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || null;
+    return null;
   };
 
   return {

@@ -12,7 +12,7 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [location] = useLocation();
+  const [location] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const { isConnected, connectedDevices } = useRealtimeSync();
 
   const getPageTitle = () => {

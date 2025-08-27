@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useLocation } from "wouter";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Wallet, BarChart3, List, Send, Search, FileText, LogOut, User, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const [location, setLocation] = useLocation();
+  const [location, setLocation] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const { user } = useAuth();
 
   const navItems = [
@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   ];
 
   const handleNavigation = (path: string) => {
-    setLocation(path);
+    window.location.href = path;
     onClose();
   };
 

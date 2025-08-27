@@ -21,7 +21,10 @@ export default function Landing() {
             Track your M-Pesa transactions, categorize expenses automatically, and gain insights into your financial habits with our beautiful, secure platform.
           </p>
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => {
+              // Since backend auth isn't available, redirect to dashboard for demo
+              window.location.href = '/dashboard';
+            }}
             className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 text-lg px-8 py-3"
             data-testid="button-login"
           >
