@@ -1,164 +1,93 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAuth } from './useAuth';
 
-interface Device {
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface ConnectedDevice {
   id: string;
   name: string;
-  lastSync: Date;
+  lastSeen: Date;
+  isOnline: boolean;
 }
 
 export function useRealtimeSync() {
   const [isConnected, setIsConnected] = useState(false);
-  const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
-  const wsRef = useRef<WebSocket | null>(null);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { user } = useAuth();
+  const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>([]);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  const connect = () => {
-    if (!user) {
-      console.log('No user authenticated, skipping WebSocket connection');
-      return;
-    }
-
-    // Clean up existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    // Clear existing heartbeat
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-    }
-
-    // Check if we're in browser environment
-    if (typeof window === 'undefined') {
-      console.log('Server-side rendering, skipping WebSocket connection');
-      return;
-    }
-
+  const connect = useCallback(async () => {
     try {
-      // For development, create a mock connection
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Development mode: Using mock real-time sync');
-        setIsConnected(true);
-
-        // Simulate connected devices
-        setConnectedDevices([
-          {
-            id: 'device-1',
-            name: 'Primary Phone',
-            lastSync: new Date(),
-          },
-        ]);
-
+      if (!supabase) {
+        console.warn('Supabase not available for realtime sync');
         return;
       }
 
-      // Production WebSocket logic would go here
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        wsRef.current = ws;
-
-        // Authenticate with the server
-        ws.send(JSON.stringify({
-          type: 'auth',
-          data: { userId: user.id }
-        }));
-
-        // Start heartbeat
-        heartbeatIntervalRef.current = setInterval(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'heartbeat' }));
-          }
-        }, 30000);
-
-        console.log('Real-time sync connected');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          switch (data.type) {
-            case 'devices':
-              setConnectedDevices(data.devices);
-              break;
-            case 'sync':
-              console.log('Sync event received:', data);
-              break;
-            default:
-              console.log('Unknown message type:', data.type);
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+      // Mock connection for demo purposes
+      setIsConnected(true);
+      setLastSyncTime(new Date());
+      
+      // Simulate connected devices
+      setConnectedDevices([
+        {
+          id: 'device-1',
+          name: 'Main Phone',
+          lastSeen: new Date(),
+          isOnline: true
         }
-      };
+      ]);
 
-      ws.onclose = () => {
-        setIsConnected(false);
-        wsRef.current = null;
-
-        if (heartbeatIntervalRef.current) {
-          clearInterval(heartbeatIntervalRef.current);
-          heartbeatIntervalRef.current = null;
-        }
-
-        console.log('WebSocket connection closed');
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setIsConnected(false);
-      };
-
+      console.log('Connected to realtime sync');
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error('Failed to connect to realtime sync:', error);
       setIsConnected(false);
     }
-  };
+  }, []);
 
-  const disconnect = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
+  const disconnect = useCallback(() => {
+    try {
+      setIsConnected(false);
+      setConnectedDevices([]);
+      console.log('Disconnected from realtime sync');
+    } catch (error) {
+      console.error('Error disconnecting from realtime sync:', error);
     }
+  }, []);
 
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
+  const triggerSync = useCallback(async () => {
+    try {
+      if (!isConnected || !supabase) {
+        console.warn('Not connected to realtime sync');
+        return;
+      }
+
+      setLastSyncTime(new Date());
+      console.log('Manual sync triggered');
+      
+      // Mock sync success
+      return { success: true, timestamp: new Date() };
+    } catch (error) {
+      console.error('Failed to trigger sync:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
-
-    setIsConnected(false);
-    setConnectedDevices([]);
-  };
-
-  const triggerSync = () => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'sync' }));
-    } else {
-      console.log('WebSocket not connected, cannot trigger sync');
-    }
-  };
+  }, [isConnected]);
 
   useEffect(() => {
-    if (user) {
+    // Auto-connect on mount if supabase is available
+    if (supabase) {
       connect();
-    } else {
-      disconnect();
     }
 
+    // Cleanup on unmount
     return () => {
       disconnect();
     };
-  }, [user]);
+  }, [connect, disconnect]);
 
   return {
     isConnected,
     connectedDevices,
     triggerSync,
     disconnect,
-    reconnect: connect
+    reconnect: connect,
+    lastSyncTime
   };
 }

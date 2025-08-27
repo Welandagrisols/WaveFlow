@@ -12,10 +12,11 @@ console.log('Supabase Key exists:', !!supabaseKey);
 // Validate URL format
 const isValidUrl = supabaseUrl && supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
 
-if (!isValidUrl) {
-  console.warn('Invalid Supabase URL format. Expected: https://xxx.supabase.co');
-  console.warn('Running in demo mode without Supabase');
-  export const supabase = null;
-} else {
-  export const supabase = createClient(supabaseUrl, supabaseKey || '');
-}
+// Export supabase client or null based on validation
+export const supabase = !isValidUrl 
+  ? (() => {
+      console.warn('Invalid Supabase URL format. Expected: https://xxx.supabase.co');
+      console.warn('Running in demo mode without Supabase');
+      return null;
+    })()
+  : createClient(supabaseUrl, supabaseKey || '');
