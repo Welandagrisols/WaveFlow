@@ -7,8 +7,8 @@ channel = "stable-25_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "run", "start"]
-build = ["npm", "run", "build"]
+run = ["sh", "-c", "npm run start"]
+build = ["sh", "-c", "npm run build"]
 
 [[ports]]
 localPort = 5000
@@ -18,7 +18,7 @@ externalPort = 80
 PORT = "5000"
 
 [workflows]
-runButton = "Project"
+runButton = "Next.js Development"
 
 [[workflows.workflow]]
 name = "Project"
@@ -37,6 +37,15 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Next.js Development"
+author = 46948048
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
 
 [agent]
 integrations = ["javascript_supabase==1.0.0", "javascript_database==1.0.0", "javascript_log_in_with_replit==1.0.0", "javascript_openai==1.0.0"]
