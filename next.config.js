@@ -43,7 +43,7 @@ const nextConfig = {
     ];
   },
   experimental: {
-    serverExternalPackages: ['sharp']
+    esmExternals: 'loose'
   }
 }
 

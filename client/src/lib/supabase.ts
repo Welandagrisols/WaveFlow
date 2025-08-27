@@ -11,7 +11,7 @@ console.log('- Supabase Key configured:', !!supabaseAnonKey);
 
 // Validate configuration
 const isValidUrl = supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
-const isValidKey = supabaseAnonKey.length > 100; // Supabase keys are typically much longer
+const isValidKey = supabaseAnonKey.startsWith('eyJ') && supabaseAnonKey.length > 50; // Supabase keys start with 'eyJ' and are JWT tokens
 
 console.log('Supabase configuration validation:');
 console.log('- Valid URL:', isValidUrl);
