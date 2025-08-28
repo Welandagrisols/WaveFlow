@@ -58,10 +58,10 @@ export default {
         },
         // Enhanced Yasinga brand colors - Elegant burgundy palette
         'yasinga': {
-          'primary': 'hsl(0, 60%, 35%)',
-          'primary-dark': 'hsl(0, 65%, 28%)',
-          'secondary': 'hsl(14, 45%, 45%)',
-          'secondary-dark': 'hsl(14, 50%, 38%)',
+          'primary': '#8B2635',
+          'primary-dark': '#6B1F2A',
+          'secondary': '#B8512F',
+          'secondary-dark': '#9C3F24',
           'success': 'hsl(142, 71%, 45%)',
           'warning': 'hsl(38, 92%, 50%)',
           'error': 'hsl(0, 72%, 51%)',
