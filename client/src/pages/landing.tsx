@@ -66,7 +66,7 @@ export default function Landing() {
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="bg-gradient-to-r from-yasinga-primary to-yasinga-primary-dark hover:from-yasinga-primary-dark hover:to-yasinga-primary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-[#8B2635] hover:bg-[#6B1F2A] text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <Zap className="w-5 h-5 mr-2" />
                 Automatic SMS Detection
@@ -135,7 +135,7 @@ export default function Landing() {
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="bg-gradient-to-r from-yasinga-primary to-yasinga-primary-dark hover:from-yasinga-primary-dark hover:to-yasinga-primary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-[#8B2635] hover:bg-[#6B1F2A] text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 Get Started Now
                 <ArrowRight className="w-5 h-5 ml-2" />
