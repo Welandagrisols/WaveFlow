@@ -6,6 +6,6 @@
   "/mobile": "pages/mobile.js",
   "/dashboard": "pages/dashboard.js",
   "/api/transactions/summary": "pages/api/transactions/summary.js",
-  "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js",
-  "/api/transactions/by-category": "pages/api/transactions/by-category.js"
+  "/api/transactions/by-category": "pages/api/transactions/by-category.js",
+  "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js"
 }
