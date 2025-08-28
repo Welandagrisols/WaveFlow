@@ -1,55 +1,68 @@
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../lib/supabase';
 
-type SupabaseClient = typeof supabase;
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const client = supabase as SupabaseClient;
-  if (!client) {
-    return res.status(500).json({ error: 'Database not configured' });
-  }
+  try {
+    switch (req.method) {
+      case 'GET':
+        const { data: transactions, error: getError } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('date', { ascending: false });
 
-  if (req.method === 'GET') {
-    try {
-      const { data: transactions, error } = await client
-        .from('transactions')
-        .select(`
-          *,
-          categories(name, color)
-        `)
-        .order('transaction_date', { ascending: false });
+        if (getError) {
+          return res.status(400).json({ error: getError.message });
+        }
 
-      if (error) {
-        return res.status(500).json({ error: error.message });
-      }
+        return res.status(200).json(transactions);
 
-      return res.status(200).json(transactions || []);
-    } catch (error) {
-      console.error('API error:', error);
-      return res.status(500).json({ error: 'Internal server error' });
+      case 'POST':
+        const { data: newTransaction, error: postError } = await supabase
+          .from('transactions')
+          .insert([req.body])
+          .select()
+          .single();
+
+        if (postError) {
+          return res.status(400).json({ error: postError.message });
+        }
+
+        return res.status(201).json(newTransaction);
+
+      case 'PUT':
+        const { id } = req.query;
+        const { data: updatedTransaction, error: putError } = await supabase
+          .from('transactions')
+          .update(req.body)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (putError) {
+          return res.status(400).json({ error: putError.message });
+        }
+
+        return res.status(200).json(updatedTransaction);
+
+      case 'DELETE':
+        const { id: deleteId } = req.query;
+        const { error: deleteError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', deleteId);
+
+        if (deleteError) {
+          return res.status(400).json({ error: deleteError.message });
+        }
+
+        return res.status(204).end();
+
+      default:
+        return res.status(405).json({ message: 'Method not allowed' });
     }
+  } catch (error) {
+    console.error('Transaction API error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-
-  if (req.method === 'POST') {
-    try {
-      const { data: transaction, error } = await client
-        .from('transactions')
-        .insert(req.body)
-        .select()
-        .single();
-
-      if (error) {
-        return res.status(500).json({ error: error.message });
-      }
-
-      return res.status(201).json(transaction);
-    } catch (error) {
-      console.error('API error:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-
-  res.setHeader('Allow', ['GET', 'POST']);
-  res.status(405).end(`Method ${req.method} Not Allowed`);
 }

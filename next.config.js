@@ -1,7 +1,5 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -32,18 +30,6 @@ const nextConfig = {
         ],
       },
     ];
-  },
-  // Fix cross-origin issues for Replit
-  async rewrites() {
-    return [
-      {
-        source: '/_next/:path*',
-        destination: '/_next/:path*',
-      },
-    ];
-  },
-  experimental: {
-    esmExternals: 'loose'
   }
 }
 
