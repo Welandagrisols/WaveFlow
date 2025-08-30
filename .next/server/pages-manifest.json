@@ -2,10 +2,5 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/mobile": "pages/mobile.js",
-  "/dashboard": "pages/dashboard.js",
-  "/api/transactions/summary": "pages/api/transactions/summary.js",
-  "/api/transactions/by-category": "pages/api/transactions/by-category.js",
-  "/api/sms-transactions/unconfirmed": "pages/api/sms-transactions/unconfirmed.js"
+  "/": "pages/index.js"
 }
