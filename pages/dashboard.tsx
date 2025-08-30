@@ -221,7 +221,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-slate-800">Yasinga</h1>
-              <p className="text-sm text-slate-600">Welcome back, {user.email}</p>
+              <p className="text-sm text-slate-600">Smart M-Pesa tracking for your business & personal expenses</p>
             </div>
             <Button 
               variant="ghost" 
