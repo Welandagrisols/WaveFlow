@@ -54,26 +54,42 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
     }
   ];
 
+  const getCardColors = (color: string) => {
+    switch (color) {
+      case "yasinga-primary":
+        return { bg: "bg-blue-50", border: "border-blue-200", icon: "text-blue-600", ring: "ring-blue-100" };
+      case "yasinga-error":
+        return { bg: "bg-red-50", border: "border-red-200", icon: "text-red-600", ring: "ring-red-100" };
+      case "yasinga-success":
+        return { bg: "bg-green-50", border: "border-green-200", icon: "text-green-600", ring: "ring-green-100" };
+      case "yasinga-warning":
+        return { bg: "bg-orange-50", border: "border-orange-200", icon: "text-orange-600", ring: "ring-orange-100" };
+      default:
+        return { bg: "bg-gray-50", border: "border-gray-200", icon: "text-gray-600", ring: "ring-gray-100" };
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card) => {
         const IconComponent = card.icon;
+        const colors = getCardColors(card.color);
         
         return (
-          <Card key={card.title} className="yasinga-card" data-testid={card.testId}>
+          <Card key={card.title} className="yasinga-card border-0 shadow-sm hover:shadow-md transition-shadow duration-200" data-testid={card.testId}>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                  <p className="text-2xl font-bold text-slate-800">{card.value}</p>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-600 mb-1">{card.title}</p>
+                  <p className="text-2xl font-bold text-slate-900 leading-tight">{card.value}</p>
                 </div>
-                <div className={`w-12 h-12 bg-${card.color} bg-opacity-10 rounded-lg flex items-center justify-center`}>
-                  <IconComponent className={`w-6 h-6 text-${card.color}`} />
+                <div className={`w-14 h-14 ${colors.bg} ${colors.border} border-2 rounded-full flex items-center justify-center ring-4 ${colors.ring} ml-3`}>
+                  <IconComponent className={`w-7 h-7 ${colors.icon}`} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center text-sm">
+              <div className="flex items-center text-sm">
                 {card.change && (
-                  <span className={card.change.startsWith('+') ? 'text-yasinga-success' : 'text-yasinga-error'}>
+                  <span className={`font-medium ${card.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
                     {card.change}
                   </span>
                 )}
