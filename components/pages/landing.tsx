@@ -51,23 +51,23 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:transform hover:-translate-y-1 hover:transition-transform hover:duration-200">
+          <Card className="bg-white p-6 rounded-xl shadow-sm border border-yasinga-slate-200 hover:transform hover:-translate-y-1 hover:shadow-lg hover:border-yasinga-primary/20 transition-all duration-200">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-yasinga-success/10 rounded-lg flex items-center justify-center mx-auto mb-4 border border-yasinga-success/20">
+                <Shield className="w-6 h-6 text-yasinga-success" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">Bank-Level Security</h3>
-              <p className="text-sm text-slate-600">Your financial data is encrypted and protected with enterprise security</p>
+              <h3 className="text-lg font-semibold text-yasinga-slate-800 mb-2">Bank-Level Security</h3>
+              <p className="text-sm text-yasinga-slate-600">Your financial data is encrypted and protected with enterprise security</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:transform hover:-translate-y-1 hover:transition-transform hover:duration-200">
+          <Card className="bg-white p-6 rounded-xl shadow-sm border border-yasinga-slate-200 hover:transform hover:-translate-y-1 hover:shadow-lg hover:border-yasinga-warning/20 transition-all duration-200">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Wallet className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 bg-yasinga-warning/10 rounded-lg flex items-center justify-center mx-auto mb-4 border border-yasinga-warning/20">
+                <Wallet className="w-6 h-6 text-yasinga-warning" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">Expense Tracking</h3>
-              <p className="text-sm text-slate-600">Track business and personal expenses with intelligent categorization</p>
+              <h3 className="text-lg font-semibold text-yasinga-slate-800 mb-2">Expense Tracking</h3>
+              <p className="text-sm text-yasinga-slate-600">Track business and personal expenses with intelligent categorization</p>
             </CardContent>
           </Card>
         </div>

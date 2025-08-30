@@ -192,19 +192,19 @@ export default function Dashboard() {
         return (
           <Card 
             key={action.title}
-            className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] bg-gradient-to-r from-blue-500 to-cyan-500 border-0 text-white"
+            className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] bg-gradient-to-r from-yasinga-primary to-yasinga-secondary border-0 text-white"
             onClick={() => router.push(action.href)}
           >
             <CardContent className="p-4">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center border border-white/30">
                   <IconComponent className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-white">{action.title}</h3>
-                  <p className="text-sm text-blue-100">{action.description}</p>
+                  <p className="text-sm text-white/80">{action.description}</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-blue-100" />
+                <ArrowRight className="w-5 h-5 text-white/80" />
               </div>
             </CardContent>
           </Card>

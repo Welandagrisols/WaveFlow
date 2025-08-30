@@ -74,20 +74,20 @@ export default function SummaryCards({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                  <p className="text-2xl font-bold text-slate-800">{card.value}</p>
+                  <p className="text-sm font-medium text-yasinga-slate-600">{card.title}</p>
+                  <p className="text-2xl font-bold text-yasinga-slate-800">{card.value}</p>
                 </div>
-                <div className={`w-12 h-12 bg-${card.color} bg-opacity-10 rounded-lg flex items-center justify-center`}>
+                <div className={`w-12 h-12 bg-${card.color} bg-opacity-10 rounded-lg flex items-center justify-center border border-${card.color} border-opacity-20`}>
                   <IconComponent className={`w-6 h-6 text-${card.color}`} />
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm">
                 {card.change && (
-                  <span className={card.change.startsWith('+') ? 'text-yasinga-success' : 'text-yasinga-error'}>
+                  <span className={card.change.startsWith('+') ? 'text-yasinga-success font-medium' : 'text-yasinga-error font-medium'}>
                     {card.change}
                   </span>
                 )}
-                <span className="text-slate-500 ml-1">{card.changeLabel}</span>
+                <span className="text-yasinga-slate-500 ml-1">{card.changeLabel}</span>
               </div>
             </CardContent>
           </Card>

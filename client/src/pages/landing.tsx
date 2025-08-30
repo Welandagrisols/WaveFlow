@@ -80,43 +80,43 @@ export default function Landing() {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <Card className="bg-white/60 backdrop-blur-sm border-0 hover:shadow-lg transition-shadow">
+            <Card className="bg-white/70 backdrop-blur-sm border border-yasinga-primary/10 hover:shadow-lg hover:border-yasinga-primary/20 transition-all">
               <CardHeader>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-yasinga-primary/10 rounded-lg flex items-center justify-center mb-4 border border-yasinga-primary/20">
+                  <Zap className="w-6 h-6 text-yasinga-primary" />
                 </div>
-                <CardTitle className="text-lg">Smart Detection</CardTitle>
+                <CardTitle className="text-lg text-yasinga-slate-800">Smart Detection</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 text-sm">
+                <p className="text-yasinga-slate-600 text-sm">
                   Automatically processes M-Pesa SMS messages and extracts transaction details.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/60 backdrop-blur-sm border-0 hover:shadow-lg transition-shadow">
+            <Card className="bg-white/70 backdrop-blur-sm border border-yasinga-secondary/10 hover:shadow-lg hover:border-yasinga-secondary/20 transition-all">
               <CardHeader>
-                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                  <TrendingUp className="w-6 h-6 text-teal-600" />
+                <div className="w-12 h-12 bg-yasinga-secondary/10 rounded-lg flex items-center justify-center mb-4 border border-yasinga-secondary/20">
+                  <TrendingUp className="w-6 h-6 text-yasinga-secondary" />
                 </div>
-                <CardTitle className="text-lg">Smart Categorization</CardTitle>
+                <CardTitle className="text-lg text-yasinga-slate-800">Smart Categorization</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 text-sm">
+                <p className="text-yasinga-slate-600 text-sm">
                   Transactions are automatically categorized and added to your expense tracker.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/60 backdrop-blur-sm border-0 hover:shadow-lg transition-shadow">
+            <Card className="bg-white/70 backdrop-blur-sm border border-yasinga-slate-200 hover:shadow-lg hover:border-yasinga-slate-300 transition-all">
               <CardHeader>
-                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-slate-600" />
+                <div className="w-12 h-12 bg-yasinga-slate-100 rounded-lg flex items-center justify-center mb-4 border border-yasinga-slate-200">
+                  <Shield className="w-6 h-6 text-yasinga-slate-600" />
                 </div>
-                <CardTitle className="text-lg">Secure & Private</CardTitle>
+                <CardTitle className="text-lg text-yasinga-slate-800">Secure & Private</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 text-sm">
+                <p className="text-yasinga-slate-600 text-sm">
                   Your financial data is encrypted and stored securely with industry-standard protection.
                 </p>
               </CardContent>
