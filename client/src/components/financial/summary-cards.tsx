@@ -7,13 +7,23 @@ interface SummaryCardsProps {
     totalExpenses: number;
     transactionCount: number;
   };
+  totalExpenses?: number;
+  totalIncome?: number;
+  totalTransactions?: number;
+  pendingAmount?: number;
 }
 
-export default function SummaryCards({ summary }: SummaryCardsProps) {
-  const totalIncome = summary?.totalIncome || 0;
-  const totalExpenses = summary?.totalExpenses || 0;
+export default function SummaryCards({ 
+  summary, 
+  totalExpenses: propExpenses, 
+  totalIncome: propIncome, 
+  totalTransactions: propTransactions, 
+  pendingAmount 
+}: SummaryCardsProps) {
+  const totalIncome = propIncome ?? summary?.totalIncome ?? 0;
+  const totalExpenses = propExpenses ?? summary?.totalExpenses ?? 0;
   const totalBalance = totalIncome - totalExpenses;
-  const transactionCount = summary?.transactionCount || 0;
+  const transactionCount = propTransactions ?? summary?.transactionCount ?? 0;
 
   const cards = [
     {
