@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +56,7 @@ export default function Dashboard() {
         if (transactionsResponse.ok) {
           const transactionsData = await transactionsResponse.json();
           setTransactions(transactionsData);
-          
+
           // Calculate summary
           const income = transactionsData
             .filter((t: Transaction) => t.type === 'income')
@@ -65,7 +64,7 @@ export default function Dashboard() {
           const expenses = transactionsData
             .filter((t: Transaction) => t.type === 'expense')
             .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
-            
+
           setSummary({
             totalIncome: income,
             totalExpenses: expenses,
@@ -155,21 +154,21 @@ export default function Dashboard() {
         </div>
 
         {/* SMS Auto-Detection Status */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg mb-8">
+        <Card className="yasinga-card mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5 text-green-600" />
+            <CardTitle className="flex items-center gap-2 text-yasinga-slate-800">
+              <Smartphone className="h-5 w-5 text-yasinga-success" />
               Automatic SMS Detection
-              <Badge variant="default" className="bg-green-600">
+              <Badge variant="default" className="bg-yasinga-success">
                 Active
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-slate-600 mb-4">
+            <p className="text-yasinga-slate-600 mb-4">
               Your M-Pesa SMS messages are being monitored automatically. 
               {unconfirmedSmsCount > 0 && (
-                <span className="text-orange-600 font-medium">
+                <span className="text-yasinga-warning font-medium">
                   {' '}You have {unconfirmedSmsCount} unconfirmed transactions.
                 </span>
               )}
