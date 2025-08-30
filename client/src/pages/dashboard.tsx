@@ -326,37 +326,47 @@ export default function Dashboard() {
                   </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
+              <CardContent className="space-y-4">
+                {/* Quick Actions with Yasinga colors and unique shapes */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Send Money - Rounded rectangle with Yasinga blue gradient */}
+                  <div 
                     onClick={() => window.location.href = '/send-money'}
-                    className="h-20 flex-col bg-gradient-to-br from-yasinga-primary to-yasinga-secondary text-white hover:from-yasinga-primary/90 hover:to-yasinga-secondary/90 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                    className="relative h-24 bg-gradient-to-br from-[#2563eb] via-[#3b82f6] to-[#06b6d4] text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105 overflow-hidden"
                   >
-                    <Send className="h-6 w-6 mb-2" />
-                    <span className="text-sm font-medium">Send Money</span>
-                  </Button>
-                  <Button
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                    <div className="flex flex-col items-center justify-center h-full relative z-10">
+                      <Send className="h-6 w-6 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                      <span className="text-sm font-semibold">Send Money</span>
+                      <span className="text-xs opacity-80">Quick M-Pesa payment</span>
+                    </div>
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-white/20 rounded-full translate-x-4 -translate-y-4"></div>
+                    <div className="absolute bottom-0 right-0 flex items-center justify-center">
+                      <ArrowRight className="h-4 w-4 text-white/60 mr-2 mb-2" />
+                    </div>
+                  </div>
+
+                  {/* SMS Processing - Rounded rectangle with gray gradient */}
+                  <div 
                     onClick={() => window.location.href = '/sms-confirmation'}
-                    variant="outline"
-                    className="h-20 flex-col border-yasinga-warning/30 bg-yasinga-warning/5 text-yasinga-warning hover:bg-yasinga-warning/10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 relative"
+                    className="relative h-24 bg-gradient-to-br from-[#64748b] via-[#475569] to-[#334155] text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105 overflow-hidden"
                   >
-                    <MessageSquare className="h-6 w-6 mb-2" />
-                    <span className="text-sm font-medium">Confirm SMS</span>
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                    <div className="flex flex-col items-center justify-center h-full relative z-10">
+                      <MessageSquare className="h-6 w-6 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                      <span className="text-sm font-semibold">SMS Processing</span>
+                      <span className="text-xs opacity-80">{unconfirmedSmsCount || 0} pending</span>
+                    </div>
                     {unconfirmedSmsCount > 0 && (
-                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full">
+                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-pulse">
                         {unconfirmedSmsCount}
-                      </Badge>
+                      </div>
                     )}
-                  </Button>
+                    <div className="absolute bottom-0 right-0 flex items-center justify-center">
+                      <ArrowRight className="h-4 w-4 text-white/60 mr-2 mb-2" />
+                    </div>
+                  </div>
                 </div>
-                <Button
-                  onClick={() => window.location.href = '/transactions'}
-                  variant="outline"
-                  className="w-full h-12 justify-start border-slate-200 hover:bg-slate-50"
-                >
-                  <List className="mr-3 h-5 w-5 text-slate-600" />
-                  <span className="font-medium text-slate-700">View All Transactions</span>
-                </Button>
               </CardContent>
             </Card>
             
