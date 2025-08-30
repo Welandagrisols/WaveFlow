@@ -236,30 +236,8 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content with Tabs */}
-      <div className="p-4">
+      <div className="p-4 pb-24">
         <Tabs defaultValue="home" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="home" className="text-xs">
-              <Home className="w-4 h-4 mr-1" />
-              Home
-            </TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs">
-              <CreditCard className="w-4 h-4 mr-1" />
-              Money
-            </TabsTrigger>
-            <TabsTrigger value="sms" className="text-xs">
-              <MessageSquare className="w-4 h-4 mr-1" />
-              SMS
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs">
-              <BarChart3 className="w-4 h-4 mr-1" />
-              Reports
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs">
-              <Settings className="w-4 h-4 mr-1" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
 
           {/* Home Tab */}
           <TabsContent value="home" className="space-y-6">
@@ -551,6 +529,49 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
+      
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg">
+        <div className="grid grid-cols-5 h-16">
+          <TabsList className="grid grid-cols-5 w-full h-full rounded-none bg-transparent border-none">
+            <TabsTrigger 
+              value="home" 
+              className="flex flex-col items-center justify-center gap-1 text-xs h-full rounded-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 border-none"
+            >
+              <Home className="w-5 h-5" />
+              <span>Home</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="transactions" 
+              className="flex flex-col items-center justify-center gap-1 text-xs h-full rounded-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 border-none"
+            >
+              <CreditCard className="w-5 h-5" />
+              <span>Money</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="sms" 
+              className="flex flex-col items-center justify-center gap-1 text-xs h-full rounded-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 border-none"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>SMS</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="flex flex-col items-center justify-center gap-1 text-xs h-full rounded-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 border-none"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>Reports</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="flex flex-col items-center justify-center gap-1 text-xs h-full rounded-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 border-none"
+            >
+              <Settings className="w-5 h-5" />
+              <span>Settings</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
       </div>
     </div>
   );
