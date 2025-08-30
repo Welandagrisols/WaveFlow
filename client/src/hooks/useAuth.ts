@@ -11,31 +11,39 @@ export function useAuth() {
   useEffect(() => {
     // Force loading to false if supabase is not available
     if (!supabase) {
-      console.log('Supabase not configured, setting loading to false');
+      console.log('❌ Supabase not configured, setting loading to false');
       setUser(null);
       setLoading(false);
       return;
     }
 
+    console.log('🔄 Starting auth initialization...');
+
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      console.log('Auth timeout - setting loading to false');
-      setUser(null);
+      console.log('⏰ Auth timeout reached - setting loading to false');
       setLoading(false);
-    }, 2000);
+    }, 3000);
 
     // Get initial session
     (supabase as any).auth.getSession().then(({ data: { session }, error }: any) => {
       clearTimeout(timeout);
       if (error) {
-        console.error('Error getting session:', error);
+        console.error('❌ Error getting session:', error);
+        setUser(null);
+        setLoading(false);
+        return;
       }
-      console.log('Session loaded:', !!session?.user);
+      
+      console.log('✅ Session loaded successfully:', !!session?.user);
+      if (session?.user) {
+        console.log('👤 User authenticated:', session.user.email);
+      }
       setUser(session?.user ?? null);
       setLoading(false);
     }).catch((error: any) => {
       clearTimeout(timeout);
-      console.error('Failed to get session:', error);
+      console.error('❌ Failed to get session:', error);
       setUser(null);
       setLoading(false);
     });
@@ -43,12 +51,13 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = (supabase as any).auth.onAuthStateChange(
       (event: any, session: any) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Invalidate queries on auth change
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          console.log('🔄 Invalidating queries due to auth change');
           queryClient.invalidateQueries();
         }
       }

@@ -51,10 +51,8 @@ interface SummaryData {
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, loading, isSupabaseConfigured } = useAuth();
   const isAuthenticated = !!user;
-  const isLoading = loading;
-  const isSupabaseConfigured = true; // Always use Supabase now
   const [showWelcome, setShowWelcome] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -69,18 +67,19 @@ export default function Dashboard() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    // Only redirect if we're not loading and definitely not authenticated
+    if (!loading && !isAuthenticated && isSupabaseConfigured) {
+      console.log('Redirecting to login - user not authenticated');
       toast({
-        title: "Unauthorized", 
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
+        title: "Authentication required", 
+        description: "Please sign in to continue",
+        variant: "default",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
+        window.location.href = "/login";
+      }, 1000);
     }
-  }, [isAuthenticated, loading, toast]);
+  }, [isAuthenticated, loading, isSupabaseConfigured, toast]);
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
     queryKey: ["supabase-transactions"],
@@ -196,22 +195,23 @@ export default function Dashboard() {
   }, []);
 
 
-  if (loading || summaryLoading || transactionsLoading) {
+  // Show loading only if auth is loading OR if we're authenticated and data is loading
+  if (loading || (isAuthenticated && (summaryLoading || transactionsLoading))) {
     return (
-      <div className="p-4 lg:p-8">
-        <div className="animate-pulse space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-slate-200 rounded-xl" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 h-96 bg-slate-200 rounded-xl" />
-            <div className="h-96 bg-slate-200 rounded-xl" />
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-blue-600 font-medium">
+            {loading ? 'Authenticating...' : 'Loading dashboard...'}
+          </p>
         </div>
       </div>
     );
+  }
+
+  // If not loading and not authenticated, don't render anything (redirect will happen)
+  if (!loading && !isAuthenticated) {
+    return null;
   }
 
   return (
