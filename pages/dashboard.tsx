@@ -216,18 +216,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="px-4 py-3">
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 shadow-lg">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-slate-800">Yasinga</h1>
-              <p className="text-sm text-slate-600">Smart M-Pesa tracking for your business & personal expenses</p>
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent tracking-tight">
+                Yasinga
+              </h1>
+              <p className="text-sm text-blue-100 font-medium mt-1 leading-relaxed">
+                Smart M-Pesa tracking for your business & personal expenses
+              </p>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={handleLogout}
-              className="text-slate-600"
+              className="text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
             >
               <LogOut className="w-4 h-4" />
             </Button>
