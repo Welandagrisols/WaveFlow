@@ -69,9 +69,9 @@ export default function Dashboard() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!loading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
+        title: "Unauthorized", 
         description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
@@ -80,33 +80,79 @@ export default function Dashboard() {
       }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, loading, toast]);
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionDisplay[]>({
     queryKey: ["supabase-transactions"],
     queryFn: async () => {
-      // Return empty array since Supabase is not configured
-      return [];
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('transactionDate', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        return [];
+      }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isSupabaseConfigured,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: summary, isLoading: summaryLoading } = useQuery<SummaryData>({
     queryKey: ["supabase-summary"],
     queryFn: async () => {
-      // Return default summary since Supabase is not configured
-      return { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('amount, direction');
+        
+        if (error) throw error;
+        
+        const summaryData = data?.reduce((acc: any, transaction: any) => {
+          const amount = parseFloat(transaction.amount);
+          if (transaction.direction === 'IN') {
+            acc.totalIncome += amount;
+          } else {
+            acc.totalExpenses += amount;
+          }
+          acc.transactionCount++;
+          return acc;
+        }, { totalIncome: 0, totalExpenses: 0, transactionCount: 0 });
+        
+        return summaryData || { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
+      } catch (error) {
+        console.error('Error fetching summary:', error);
+        return { totalIncome: 0, totalExpenses: 0, transactionCount: 0 };
+      }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isSupabaseConfigured,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: categoryData = [], isLoading: categoryLoading } = useQuery<CategoryData[]>({
     queryKey: ["supabase-categories"],
     queryFn: async () => {
-      // Return empty array since Supabase is not configured
-      return [];
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*');
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        return [];
+      }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isSupabaseConfigured,
+    retry: 1,
+    staleTime: 10 * 60 * 1000,
   });
 
   // Check if user is new (no transactions)
@@ -150,7 +196,7 @@ export default function Dashboard() {
   }, []);
 
 
-  if (isLoading || summaryLoading) {
+  if (loading || summaryLoading || transactionsLoading) {
     return (
       <div className="p-4 lg:p-8">
         <div className="animate-pulse space-y-6">

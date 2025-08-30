@@ -20,8 +20,9 @@ export function useAuth() {
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       console.log('Auth timeout - setting loading to false');
+      setUser(null);
       setLoading(false);
-    }, 3000);
+    }, 2000);
 
     // Get initial session
     (supabase as any).auth.getSession().then(({ data: { session }, error }: any) => {
