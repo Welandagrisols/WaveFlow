@@ -338,15 +338,17 @@ export default function Dashboard() {
                   className="cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] bg-gradient-to-r from-blue-500 to-cyan-500 border-0 text-white"
                   onClick={() => router.push('/send-money')}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Send className="w-6 h-6 text-white" />
-                      </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white">Send Money</h3>
+                        <h3 className="font-semibold text-white mb-1">Send Money</h3>
                         <p className="text-sm text-blue-100">Quick M-Pesa payment</p>
                       </div>
+                      <div className="w-14 h-14 bg-white/20 border-2 border-white/30 rounded-full flex items-center justify-center ring-4 ring-white/10 ml-3">
+                        <Send className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end">
                       <ArrowRight className="w-5 h-5 text-blue-100" />
                     </div>
                   </CardContent>
@@ -361,17 +363,19 @@ export default function Dashboard() {
                   }`}
                   onClick={() => router.push('/sms-confirmation')}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        <MessageSquare className="w-6 h-6 text-white" />
-                      </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white">SMS Processing</h3>
+                        <h3 className="font-semibold text-white mb-1">SMS Processing</h3>
                         <p className="text-sm text-orange-100">
                           {unconfirmedSms?.length || 0} pending
                         </p>
                       </div>
+                      <div className="w-14 h-14 bg-white/20 border-2 border-white/30 rounded-full flex items-center justify-center ring-4 ring-white/10 ml-3">
+                        <MessageSquare className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end">
                       <ArrowRight className="w-5 h-5 text-orange-100" />
                     </div>
                   </CardContent>
@@ -384,35 +388,39 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold text-slate-800">Expense Breakdown</h2>
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-emerald-100 font-medium">Business</p>
-                        <p className="text-xl font-bold text-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-emerald-100 font-medium mb-1">Business</p>
+                        <p className="text-2xl font-bold text-white leading-tight">
                           KES {summary?.businessExpenses?.toLocaleString() || '0'}
                         </p>
-                        <p className="text-xs text-emerald-200 mt-1">This month</p>
                       </div>
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Wallet className="w-6 h-6 text-white" />
+                      <div className="w-14 h-14 bg-white/20 border-2 border-white/30 rounded-full flex items-center justify-center ring-4 ring-white/10 ml-3">
+                        <Wallet className="w-7 h-7 text-white" />
                       </div>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="text-emerald-200">This month</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-violet-500 to-purple-600 border-0 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-violet-100 font-medium">Personal</p>
-                        <p className="text-xl font-bold text-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-violet-100 font-medium mb-1">Personal</p>
+                        <p className="text-2xl font-bold text-white leading-tight">
                           KES {summary?.personalExpenses?.toLocaleString() || '0'}
                         </p>
-                        <p className="text-xs text-violet-200 mt-1">This month</p>
                       </div>
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <User className="w-6 h-6 text-white" />
+                      <div className="w-14 h-14 bg-white/20 border-2 border-white/30 rounded-full flex items-center justify-center ring-4 ring-white/10 ml-3">
+                        <User className="w-7 h-7 text-white" />
                       </div>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="text-violet-200">This month</span>
                     </div>
                   </CardContent>
                 </Card>
