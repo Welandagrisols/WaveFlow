@@ -265,30 +265,42 @@ export default function Dashboard() {
           <TabsContent value="home" className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-green-600 font-medium">Total In</p>
-                      <p className="text-lg font-bold text-green-800">
+              <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-600 mb-1">Total In</p>
+                      <p className="text-2xl font-bold text-slate-900 leading-tight">
                         KES {summary?.totalIn?.toLocaleString() || '0'}
                       </p>
                     </div>
-                    <TrendingDown className="w-6 h-6 text-green-600 rotate-180" />
+                    <div className="w-14 h-14 bg-green-50 border-green-200 border-2 rounded-full flex items-center justify-center ring-4 ring-green-100 ml-3">
+                      <TrendingDown className="w-7 h-7 text-green-600 rotate-180" />
+                    </div>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-green-600">+12.5%</span>
+                    <span className="text-slate-500 ml-1">vs last month</span>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-red-50 border-red-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-red-600 font-medium">Total Out</p>
-                      <p className="text-lg font-bold text-red-800">
+              <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-600 mb-1">Total Out</p>
+                      <p className="text-2xl font-bold text-slate-900 leading-tight">
                         KES {summary?.totalOut?.toLocaleString() || '0'}
                       </p>
                     </div>
-                    <TrendingDown className="w-6 h-6 text-red-600" />
+                    <div className="w-14 h-14 bg-red-50 border-red-200 border-2 rounded-full flex items-center justify-center ring-4 ring-red-100 ml-3">
+                      <TrendingDown className="w-7 h-7 text-red-600" />
+                    </div>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-red-600">+8.2%</span>
+                    <span className="text-slate-500 ml-1">vs last month</span>
                   </div>
                 </CardContent>
               </Card>
