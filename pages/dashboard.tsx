@@ -216,22 +216,27 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 shadow-lg">
+      <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 shadow-lg">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent tracking-tight">
-                Yasinga
-              </h1>
-              <p className="text-sm text-blue-100 font-medium mt-1 leading-relaxed">
-                Smart M-Pesa tracking for your business & personal expenses
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-800 to-red-900 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-sm italic">Y</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-extrabold text-red-900 tracking-tight">
+                  YASINGA
+                </h1>
+                <p className="text-sm text-red-800 font-medium mt-0.5 leading-relaxed">
+                  Smart M-Pesa tracking for your business & personal expenses
+                </p>
+              </div>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={handleLogout}
-              className="text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
+              className="text-red-800 hover:text-red-900 hover:bg-red-900/10 transition-all duration-200"
             >
               <LogOut className="w-4 h-4" />
             </Button>
