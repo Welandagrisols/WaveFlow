@@ -196,36 +196,36 @@ export default function Dashboard() {
 
         {/* Action Buttons Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-primary/5 to-yasinga-secondary/5 border border-yasinga-primary/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Send className="h-5 w-5 text-blue-600" />
-                Send Money
+                <Send className="h-5 w-5 text-yasinga-primary" />
+                <span className="text-yasinga-slate-800">Send Money</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">Send M-Pesa payments and track them</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">Send M-Pesa payments and track them</p>
               <Button 
                 onClick={() => handleNavigation('/send-money')}
-                className="w-full"
+                className="w-full yasinga-btn-primary rounded-xl"
               >
                 Send Payment
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-success/5 to-yasinga-secondary/5 border border-yasinga-success/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-green-600" />
-                Track Payments
+                <Eye className="h-5 w-5 text-yasinga-success" />
+                <span className="text-yasinga-slate-800">Track Payments</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">Monitor your payment status</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">Monitor your payment status</p>
               <Button 
                 onClick={() => handleNavigation('/track-payments')}
-                className="w-full"
+                className="w-full yasinga-btn-outline rounded-xl"
                 variant="outline"
               >
                 View Payments
@@ -233,18 +233,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-secondary/5 to-yasinga-primary/5 border border-yasinga-secondary/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-purple-600" />
-                View Reports
+                <BarChart3 className="h-5 w-5 text-yasinga-secondary" />
+                <span className="text-yasinga-slate-800">View Reports</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">Analyze your spending patterns</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">Analyze your spending patterns</p>
               <Button 
                 onClick={() => handleNavigation('/reports')}
-                className="w-full"
+                className="w-full yasinga-btn-outline rounded-xl"
                 variant="outline"
               >
                 View Reports
@@ -252,18 +252,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-warning/5 to-yasinga-primary/5 border border-yasinga-warning/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-orange-600" />
-                Transactions
+                <FileText className="h-5 w-5 text-yasinga-warning" />
+                <span className="text-yasinga-slate-800">Transactions</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">View all your transaction history</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">View all your transaction history</p>
               <Button 
                 onClick={() => handleNavigation('/transactions')}
-                className="w-full"
+                className="w-full yasinga-btn-outline rounded-xl"
                 variant="outline"
               >
                 View All
@@ -271,18 +271,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-primary/5 to-yasinga-success/5 border border-yasinga-primary/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-indigo-600" />
-                Personal Tracking
+                <User className="h-5 w-5 text-yasinga-primary" />
+                <span className="text-yasinga-slate-800">Personal Tracking</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">Track personal expenses</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">Track personal expenses</p>
               <Button 
                 onClick={() => handleNavigation('/personal-tracking')}
-                className="w-full"
+                className="w-full yasinga-btn-outline rounded-xl"
                 variant="outline"
               >
                 Personal View
@@ -290,18 +290,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <Card className="yasinga-card bg-gradient-to-br from-yasinga-error/5 to-yasinga-warning/5 border border-yasinga-error/20 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5 text-red-600" />
-                SIM Management
+                <Smartphone className="h-5 w-5 text-yasinga-error" />
+                <span className="text-yasinga-slate-800">SIM Management</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 mb-4">Manage your SIM cards and settings</p>
+              <p className="text-sm text-yasinga-slate-600 mb-4">Manage your SIM cards and settings</p>
               <Button 
                 onClick={() => handleNavigation('/sim-management')}
-                className="w-full"
+                className="w-full yasinga-btn-outline rounded-xl"
                 variant="outline"
               >
                 Manage SIMs

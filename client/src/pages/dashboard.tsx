@@ -257,13 +257,13 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Transactions with enhanced styling */}
           <div className="lg:col-span-2 yasinga-fade-in">
-            <Card className="wave-card bg-white">
+            <Card className="yasinga-card bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between pb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Receipt className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-yasinga-primary/10 rounded-2xl flex items-center justify-center border border-yasinga-primary/20">
+                    <Receipt className="w-6 h-6 text-yasinga-primary" />
                   </div>
-                  <CardTitle className="text-xl font-medium text-slate-800">
+                  <CardTitle className="text-xl font-medium text-yasinga-slate-800">
                     Recent Transactions
                   </CardTitle>
                 </div>
@@ -271,7 +271,7 @@ export default function Dashboard() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.location.href = '/transactions'}
-                  className="yasinga-btn-primary border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                  className="yasinga-btn-primary border-0 shadow-md hover:shadow-lg transition-all duration-200 rounded-xl"
                 >
                   View All
                 </Button>
@@ -315,13 +315,13 @@ export default function Dashboard() {
 
           {/* Simplified Quick Actions - Mobile Optimized */}
           <div className="space-y-6 yasinga-fade-in">
-            <Card className="wave-card bg-white">
+            <Card className="yasinga-card bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-teal-600" />
+                  <div className="w-10 h-10 bg-yasinga-success/10 rounded-2xl flex items-center justify-center border border-yasinga-success/20">
+                    <Zap className="w-5 h-5 text-yasinga-success" />
                   </div>
-                  <CardTitle className="text-lg font-medium text-slate-800">
+                  <CardTitle className="text-lg font-medium text-yasinga-slate-800">
                     Quick Actions
                   </CardTitle>
                 </div>
@@ -330,7 +330,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     onClick={() => window.location.href = '/send-money'}
-                    className="h-20 flex-col wave-button-primary hover-lift"
+                    className="h-20 flex-col bg-gradient-to-br from-yasinga-primary to-yasinga-secondary text-white hover:from-yasinga-primary/90 hover:to-yasinga-secondary/90 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
                   >
                     <Send className="h-6 w-6 mb-2" />
                     <span className="text-sm font-medium">Send Money</span>
@@ -338,12 +338,12 @@ export default function Dashboard() {
                   <Button
                     onClick={() => window.location.href = '/sms-confirmation'}
                     variant="outline"
-                    className="h-20 flex-col border-orange-200 text-orange-700 hover:bg-orange-50 hover-lift"
+                    className="h-20 flex-col border-yasinga-warning/30 bg-yasinga-warning/5 text-yasinga-warning hover:bg-yasinga-warning/10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 relative"
                   >
                     <MessageSquare className="h-6 w-6 mb-2" />
                     <span className="text-sm font-medium">Confirm SMS</span>
                     {unconfirmedSmsCount > 0 && (
-                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
+                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full">
                         {unconfirmedSmsCount}
                       </Badge>
                     )}
@@ -361,9 +361,9 @@ export default function Dashboard() {
             </Card>
             
             {/* Mobile Navigation Grid */}
-            <Card className="wave-card bg-white lg:hidden">
+            <Card className="yasinga-card bg-white lg:hidden rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium text-slate-800">
+                <CardTitle className="text-lg font-medium text-yasinga-slate-800">
                   More Features
                 </CardTitle>
               </CardHeader>
@@ -371,24 +371,24 @@ export default function Dashboard() {
                 <div className="grid grid-cols-3 gap-4">
                   <button
                     onClick={() => window.location.href = '/reports'}
-                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="flex flex-col items-center p-4 rounded-2xl bg-yasinga-primary/5 border border-yasinga-primary/20 hover:bg-yasinga-primary/10 transition-all duration-200 hover:scale-105"
                   >
-                    <BarChart3 className="h-6 w-6 text-slate-600 mb-2" />
-                    <span className="text-xs font-medium text-slate-700">Reports</span>
+                    <BarChart3 className="h-6 w-6 text-yasinga-primary mb-2" />
+                    <span className="text-xs font-medium text-yasinga-slate-700">Reports</span>
                   </button>
                   <button
                     onClick={() => window.location.href = '/track-payments'}
-                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="flex flex-col items-center p-4 rounded-2xl bg-yasinga-secondary/5 border border-yasinga-secondary/20 hover:bg-yasinga-secondary/10 transition-all duration-200 hover:scale-105"
                   >
-                    <Search className="h-6 w-6 text-slate-600 mb-2" />
-                    <span className="text-xs font-medium text-slate-700">Track</span>
+                    <Search className="h-6 w-6 text-yasinga-secondary mb-2" />
+                    <span className="text-xs font-medium text-yasinga-slate-700">Track</span>
                   </button>
                   <button
                     onClick={() => window.location.href = '/personal-tracking'}
-                    className="flex flex-col items-center p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="flex flex-col items-center p-4 rounded-2xl bg-yasinga-success/5 border border-yasinga-success/20 hover:bg-yasinga-success/10 transition-all duration-200 hover:scale-105"
                   >
-                    <User className="h-6 w-6 text-slate-600 mb-2" />
-                    <span className="text-xs font-medium text-slate-700">Personal</span>
+                    <User className="h-6 w-6 text-yasinga-success mb-2" />
+                    <span className="text-xs font-medium text-yasinga-slate-700">Personal</span>
                   </button>
                 </div>
               </CardContent>
